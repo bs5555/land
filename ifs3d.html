@@ -1,0 +1,295 @@
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
+		<script>
+
+		 var RAD=(180.0/Math.PI);
+     var mlen = 32;
+     var code = {c:[
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+		 ],p:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]};
+     var C = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+
+		 var matrix =
+		 {
+			  init : function()
+				{
+					C = [[1.0, 0.0, 0.0, 0,0],
+					     [0.0, 1.0, 0.0, 0,0],
+							 [0.0, 0.0, 1.0, 0,0],
+							 [0.0, 0.0, 0.0, 1,0]];
+				},
+
+        multiply : function(A,B)
+				{
+					var R = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];;
+				  R[0][0]=(A[0][0]*B[0][0])+(A[0][1]*B[1][0])+(A[0][2]*B[2][0])+(A[0][3]*B[3][0]);
+		      R[1][0]=(A[1][0]*B[0][0])+(A[1][1]*B[1][0])+(A[1][2]*B[2][0])+(A[1][3]*B[3][0]);
+		      R[2][0]=(A[2][0]*B[0][0])+(A[2][1]*B[1][0])+(A[2][2]*B[2][0])+(A[2][3]*B[3][0]);
+		      R[3][0]=(A[3][0]*B[0][0])+(A[3][1]*B[1][0])+(A[3][2]*B[2][0])+(A[3][3]*B[3][0]);
+
+		      R[0][1]=(A[0][0]*B[0][1])+(A[0][1]*B[1][1])+(A[0][2]*B[2][1])+(A[0][3]*B[3][1]);
+		      R[1][1]=(A[1][0]*B[0][1])+(A[1][1]*B[1][1])+(A[1][2]*B[2][1])+(A[1][3]*B[3][1]);
+		      R[2][1]=(A[2][0]*B[0][1])+(A[2][1]*B[1][1])+(A[2][2]*B[2][1])+(A[2][3]*B[3][1]);
+		      R[3][1]=(A[3][0]*B[0][1])+(A[3][1]*B[1][1])+(A[3][2]*B[2][1])+(A[3][3]*B[3][1]);
+
+		      R[0][2]=(A[0][0]*B[0][2])+(A[0][1]*B[1][2])+(A[0][2]*B[2][2])+(A[0][3]*B[3][2]);
+		      R[1][2]=(A[1][0]*B[0][2])+(A[1][1]*B[1][2])+(A[1][2]*B[2][2])+(A[1][3]*B[3][2]);
+		      R[2][2]=(A[2][0]*B[0][2])+(A[2][1]*B[1][2])+(A[2][2]*B[2][2])+(A[2][3]*B[3][2]);
+		      R[3][2]=(A[3][0]*B[0][2])+(A[3][1]*B[1][2])+(A[3][2]*B[2][2])+(A[3][3]*B[3][2]);
+
+		      R[0][3]=(A[0][0]*B[0][3])+(A[0][1]*B[1][3])+(A[0][2]*B[2][3])+(A[0][3]*B[3][3]);
+		      R[1][3]=(A[1][0]*B[0][3])+(A[1][1]*B[1][3])+(A[1][2]*B[2][3])+(A[1][3]*B[3][3]);
+		      R[2][3]=(A[2][0]*B[0][3])+(A[2][1]*B[1][3])+(A[2][2]*B[2][3])+(A[2][3]*B[3][3]);
+		      R[3][3]=(A[3][0]*B[0][3])+(A[3][1]*B[1][3])+(A[3][2]*B[2][3])+(A[3][3]*B[3][3]);
+		      return(R);
+			  },
+
+				translate : function(x, y, z)
+				{
+				  var m = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];;
+				  m[0][0]=1.0; m[0][1]=0.0; m[0][2]=0.0; m[0][3]=x;
+				  m[1][0]=0.0; m[1][1]=1.0; m[1][2]=0.0; m[1][3]=y;
+				  m[2][0]=0.0; m[2][1]=0.0; m[2][2]=1.0; m[2][3]=z;
+				  m[3][0]=0.0; m[3][1]=0.0; m[3][2]=0.0; m[3][3]=1.0;
+				  C=matrix.multiply(C,m);
+				},
+
+				scale : function( x, y, z)
+				{
+				var m = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];;
+				  m[0][0]=  x; m[0][1]=0.0; m[0][2]=0.0; m[0][3]=0.0;
+				  m[1][0]=0.0; m[1][1]=  y; m[1][2]=0.0; m[1][3]=0.0;
+				  m[2][0]=0.0; m[2][1]=0.0; m[2][2]=  z; m[2][3]=0.0;
+				  m[3][0]=0.0; m[3][1]=0.0; m[3][2]=0.0; m[3][3]=1.0;
+				  C=matrix.multiply(C,m);
+				},
+
+				rotX : function(a)
+				{
+				var m = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];;
+				var ca,sa;
+				   ca=Math.cos(a/RAD);
+				   sa=Math.sin(a/RAD);
+				   m[0][0]=1.0; m[0][1]= 0.0; m[0][2]=0.0; m[0][3]=0.0;
+				   m[1][0]=0.0; m[1][1]=  ca; m[1][2]=-sa; m[1][3]=0.0;
+				   m[2][0]=0.0; m[2][1]=  sa; m[2][2]= ca; m[2][3]=0.0;
+				   m[3][0]=0.0; m[3][1]= 0.0; m[3][2]=0.0; m[3][3]=1.0;
+				   C=matrix.multiply(C,m);
+				},
+
+				rotY : function(a)
+				{
+				var m = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];;
+				var ca,sa;
+				   ca=Math.cos(a/RAD);
+				   sa=Math.sin(a/RAD);
+				   m[0][0]= ca; m[0][1]= 0.0; m[0][2]= sa; m[0][3]=0.0;
+				   m[1][0]=0.0; m[1][1]= 1.0; m[1][2]=0.0; m[1][3]=0.0;
+				   m[2][0]=-sa; m[2][1]= 0.0; m[2][2]= ca; m[2][3]=0.0;
+				   m[3][0]=0.0; m[3][1]= 0.0; m[3][2]=0.0; m[3][3]=1.0;
+				   C=matrix.multiply(C,m);
+				},
+
+				rotZ : function(a)
+				{
+				var m = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];;
+				var ca,sa;
+				   ca=Math.cos(a/RAD);
+				   sa=Math.sin(a/RAD);
+				   m[0][0]= ca; m[0][1]= -sa; m[0][2]=0.0; m[0][3]=0.0;
+				   m[1][0]= sa; m[1][1]=  ca; m[1][2]=0.0; m[1][3]=0.0;
+				   m[2][0]=0.0; m[2][1]= 0.0; m[2][2]=1.0; m[2][3]=0.0;
+				   m[3][0]=0.0; m[3][1]= 0.0; m[3][2]=0.0; m[3][3]=1.0;
+				   C=matrix.multiply(C,m);
+				}
+		 }
+
+     function myRand()
+		 {
+		    var k=Math.random();
+		    var s=Math.random();
+		    if(s<0.5) k=k*(-1.0);
+		    return(k);
+		 }
+
+     function newprob()
+		 {
+			 for(var i=0; i<mlen; i++)
+		   {
+		     code.p[i]=Math.abs(myRand());
+		   }
+		   code.p[mlen-1]=1.0;
+		   code.p.sort();
+		 }
+
+		 function newmatrix()
+		 {
+		    for(var i=0; i<mlen; i++)
+		    {
+		      var alpha=myRand();
+		      var beta=myRand();
+		      var gamma=myRand();
+
+		      var sx=myRand();
+		      var sy=myRand();
+		      var sz=myRand();
+		      var tx=myRand();
+		      var ty=myRand();
+		      var tz=myRand();
+
+		      matrix.init();
+
+		      matrix.rotX(360.0*alpha);
+		      matrix.rotY(360.0*beta);
+		      matrix.rotZ(360.0*gamma);
+		      matrix.translate(tx,ty,tz);
+		      matrix.scale(sx,sy,sz);
+
+		      for(j=0; j<4; j++)
+		      {
+		        for(k=0; k<4; k++)
+		        {
+		          code.c[i][j][k]=C[j][k];
+		        }
+		      }
+		    }
+		 }
+
+
+		 function compose(maxp)
+	 	 {
+	 	   var x=0.0;
+	 	   var y=0.0;
+	 	   var z=0.0;
+	 	   var n=1.0;
+	 	   for(var i=0; i<maxp; i++)
+	 	   {
+	 	   	 var j=Math.abs(myRand());
+	 		   var k=0;
+	 		   var a=0;
+	 		   while(j > code.p[a])
+	 	     {
+	 		     a++;
+	 		     k=a;
+	 		   }
+	 	     var newx=(code.c[k][0][0]*x)+(code.c[k][0][1]*y)+(code.c[k][0][2]*z)+(code.c[k][0][3]*n);
+	 	     var newy=(code.c[k][1][0]*x)+(code.c[k][1][1]*y)+(code.c[k][1][2]*z)+(code.c[k][1][3]*n);
+	 	     var newz=(code.c[k][2][0]*x)+(code.c[k][2][1]*y)+(code.c[k][2][2]*z)+(code.c[k][2][3]*n);
+	 	     var newn=(code.c[k][3][0]*x)+(code.c[k][3][1]*y)+(code.c[k][3][2]*z)+(code.c[k][3][3]*n);
+	 	     x=(newx/newn);
+	 	     y=(newy/newn);
+	 	     z=(newz/newn);
+	 	     n=newn;
+				 vertices.push(x*100.0,y*100.0,z*100.0);
+	 	   }
+	 	   //if(autoSize) DoEqu();
+	 	   //if(autoCenter) DoCenter();
+	 	}
+
+		 newprob();
+		 newmatrix();
+
+		 console.log(code);
+
+
+
+
+
+		  //scene
+			var scene = new THREE.Scene();
+			scene.background = new THREE.Color( 0x000000 );       //scene background solid color
+		  scene.fog = new THREE.Fog( 0x000000, 20, 400);        //set fog color, start, end
+
+      //camera
+			var camera = new THREE.PerspectiveCamera( 65, window.innerWidth/window.innerHeight, 1, 1000 );
+
+
+      //renderer
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			// controls
+			var controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.maxPolarAngle = Math.PI * 0.5;
+			controls.minDistance = 300;
+			controls.maxDistance = 2000;
+			controls.enableZoom=true;
+			controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+			controls.dampingFactor = 0.01;
+
+			var vertices = [];
+			var geometry = new THREE.BufferGeometry();
+			/*for(var i=0; i<1000000; i++)
+			{
+					var x = 200 * Math.random() - 100;
+					var y = 200 * Math.random() - 100;
+					var z = 200 * Math.random() - 100;
+					vertices.push(x,y,z);
+			}*/
+
+			compose(1000000);
+
+			geometry.addAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+			material = new THREE.PointsMaterial({ size: 1, sizeAttenuation: false} );
+		  material.color.setRGB(1.0, 1.0, 1.0);
+
+			var particles = new THREE.Points( geometry, material );
+			scene.add( particles );
+
+			camera.position.z = 5;
+
+			var animate = function () {
+				requestAnimationFrame( animate );
+        controls.update();
+				//cube.rotation.x += 0.01;
+				//cube.rotation.y += 0.01;
+
+				renderer.render( scene, camera );
+			};
+
+
+			animate();
+		</script>
+	</body>
+</html>
