@@ -12,7 +12,7 @@
 		<script>
 
 		 var RAD=(180.0/Math.PI);
-     var mlen = 32;
+     var mlen = 3;
      var code = {c:[
 			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
 			 [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
@@ -154,12 +154,17 @@
 
      function newprob()
 		 {
+		   var p = new Array();
 			 for(var i=0; i<mlen; i++)
 		   {
-		     code.p[i]=Math.abs(myRand());
+		     p[i]=Math.abs(myRand());
 		   }
-		   code.p[mlen-1]=1.0;
-		   code.p.sort();
+		   p[mlen-1]=1.0;
+		   p.sort();
+		   for(var i=0; i<mlen; i++)
+		   {
+		     code.p[i]=p[i];
+		   }
 		 }
 
 		 function newmatrix()
@@ -178,12 +183,13 @@
 		      var tz=myRand();
 
 		      matrix.init();
-
-		      matrix.rotX(360.0*alpha);
+          matrix.rotX(360.0*alpha);
 		      matrix.rotY(360.0*beta);
 		      matrix.rotZ(360.0*gamma);
 		      matrix.translate(tx,ty,tz);
 		      matrix.scale(sx,sy,sz);
+
+
 
 		      for(j=0; j<4; j++)
 		      {
@@ -251,7 +257,7 @@
 
 			// controls
 			var controls = new THREE.OrbitControls( camera, renderer.domElement );
-			controls.maxPolarAngle = Math.PI * 0.5;
+			//controls.maxPolarAngle = Math.PI * 0.5;
 			controls.minDistance = 300;
 			controls.maxDistance = 2000;
 			controls.enableZoom=true;
