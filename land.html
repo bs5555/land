@@ -163,15 +163,15 @@
 				// SCENE (FINAL)
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x050505 );
-				scene.fog = new THREE.Fog( 0x050505, 2000, 4000 );
+				//scene.fog = new THREE.Fog( 0x050505, 2000, 4000 );
 				// LIGHTS
-				scene.add( new THREE.AmbientLight( 0x111111 ) );
-				directionalLight = new THREE.DirectionalLight( 0xffffff, 1.15 );
+				//scene.add( new THREE.AmbientLight( 0x111111 ) );
+				directionalLight = new THREE.DirectionalLight( 0xffffff, 100.15 );
 				directionalLight.position.set( 500, 2000, 0 );
 				scene.add( directionalLight );
 				pointLight = new THREE.PointLight( 0xff4400, 1.5 );
 				pointLight.position.set( 0, 0, 0 );
-				scene.add( pointLight );
+				//scene.add( pointLight );
 				// HEIGHT + NORMAL MAPS
 				var normalShader =THREE.NormalMapShader;
 				var rx = 256, ry = 256;
@@ -220,7 +220,7 @@
 				uniformsTerrain[ 'diffuse' ].value.setHex( 0xffffff );
 				uniformsTerrain[ 'specular' ].value.setHex( 0xffffff );
 				uniformsTerrain[ 'shininess' ].value = 30;
-				uniformsTerrain[ 'uDisplacementScale' ].value = 137.5;
+				uniformsTerrain[ 'uDisplacementScale' ].value = 375;
 				uniformsTerrain[ 'uRepeatOverlay' ].value.set( 6, 6 );
 				var params = [
 					[ 'heightmap', 	document.getElementById( 'fragmentShaderNoise' ).textContent, 	vertexShader, uniformsNoise, false ],
@@ -296,9 +296,11 @@
 			function render() {
 				var delta = clock.getDelta();
 
+        //sun update begin
         skyprop.inclination=skyprop.inclination+0.001;
 				if(skyprop.inclination > 2) skyprop.inclination=0.0;
-				console.log(skyprop.inclination);
+
+				//console.log(skyprop.inclination);
 				var theta = Math.PI * ( skyprop.inclination - 0.5 );
 				var phi = 2 * Math.PI * (skyprop.azimuth - 0.5 );
 				sunSphere.position.x = skyprop.distance * Math.cos( phi );
@@ -306,6 +308,12 @@
 				sunSphere.position.z = skyprop.distance * Math.sin( phi ) * Math.cos( theta );
 				var uniforms = sky.material.uniforms;
 				uniforms[ "sunPosition" ].value.copy( sunSphere.position );
+
+        directionalLight.position.set( -sunSphere.position.x, sunSphere.position.y, -sunSphere.position.z );
+				//console.log(sky);
+				//scene.fog.color.setHSL(0.54,0.5,THREE.Math.clamp((skyprop.inclination/2.0),0.1,1.0));
+
+				//sun update end
 
 				if ( terrain.visible ) {
 					var fLow = 0.1, fHigh = 0.8;
