@@ -1,0 +1,156 @@
+<html>
+	<head>
+		<title>Sky study</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/controls/TrackballControls.js"></script>
+
+		<script type="application/x-glsl" id="sky-vertex">
+varying vec2 vUV;
+
+void main() {
+  vUV = uv;
+  vec4 pos = vec4(position, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * pos;
+}
+</script>
+
+<script type="application/x-glsl" id="sky-fragment">
+uniform sampler2D texture;
+varying vec2 vUV;
+
+void main() {
+  vec4 sample = texture2D(texture, vUV);
+  gl_FragColor = vec4(sample.xyz, sample.w);
+}
+</script>
+
+
+
+<script>
+
+class bsSkySphere
+{
+	mesh;
+	geo;
+	radius;
+	material;
+
+	constructor(radius,detail,material)
+	{
+		this.radius = radius;
+		this.geo = new THREE.SphereGeometry(this.radius, detail, detail);
+		this.material = material;
+		this.material.side = THREE.BackSide;
+		this.material.blending=THREE.NormalBlending;
+		this.material.transparent = true;
+		this.mesh = new THREE.Mesh(this.geo, this.material);
+		return(this.mesh);
+	}
+}
+
+</script>
+
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 10000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+      //Test object begin
+			var geometry = new THREE.BoxGeometry( 2, 1, 3 );
+			var material = new THREE.MeshBasicMaterial( { color: 0xff0000, } );
+			var cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );
+			//Test object end
+
+      //MATERIAL LAB BEGIN-------------------------
+      //Wireframe material test begin
+  		var starMaterial = new THREE.MeshBasicMaterial( { color: 0x000099, wireframe: true } );
+	  	var sunMaterial = new THREE.MeshBasicMaterial( { color: 0xffcc00, wireframe: true } );
+	  	var cloudMaterial = new THREE.MeshBasicMaterial( { color: 0x00ccff, wireframe: true } );
+		  //Wireframe material test end
+
+			//Bitmap material test begin
+      var textureLoader = new THREE.TextureLoader();
+
+			var starMaterial = new THREE.MeshBasicMaterial();
+			starMaterial.map = textureLoader.load( 'res/sky.jpg' );
+			starMaterial.map.wrapS = starMaterial.map.wrapT = THREE.RepeatWrapping;
+			starMaterial.map.repeat.set(10,5);
+
+			var sunMaterial = new THREE.MeshBasicMaterial();
+			sunMaterial.map = textureLoader.load( 'res/sun.png' );
+			sunMaterial.map.wrapS = starMaterial.map.wrapT = THREE.RepeatWrapping;
+			sunMaterial.map.repeat.set(1,1);
+
+			var cloudMaterial = new THREE.MeshBasicMaterial();
+			cloudMaterial.map = textureLoader.load( 'res/clouds.png' );
+			cloudMaterial.map.wrapS = cloudMaterial.map.wrapT = THREE.RepeatWrapping;
+			cloudMaterial.map.repeat.set(2,2);
+
+			//Bitmap material test end
+
+
+
+			//MATERIAL LAB END-------------------------
+
+    var sky = new bsSkySphere(6000,5,starMaterial);
+    var sky1 = new bsSkySphere(3000,20,sunMaterial);
+		var sky2 = new bsSkySphere(1800,20,cloudMaterial);
+		var sky3 = new bsSkySphere(1500,20,cloudMaterial);
+
+		scene.add(sky);
+		scene.add(sky1);
+    scene.add(sky2);
+		scene.add(sky3);
+
+
+	/*	var dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+				dirLight.color.setHSL( 1.0, 1.0, 0.95 );
+				dirLight.position.set( - 11, 11.75, 11 );
+				scene.add( dirLight );
+*/
+
+// controls
+controls = new THREE.TrackballControls( camera, renderer.domElement );
+controls.zoom=0.05;
+controls.rotateSpeed = 2.0;
+controls.zoomSpeed = 0.2;
+controls.panSpeed = 0.8;
+controls.staticMoving = false;
+controls.dynamicDampingFactor = 0.1;
+controls.keys = [ 65, 83, 68 ];
+
+
+			 camera.position.z = 5;
+
+			var animate = function () {
+				requestAnimationFrame( animate );
+        controls.update();
+				//cube.rotation.x += 0.01;
+				//cube.rotation.y += 0.01;
+
+				sky.rotation.y +=0.0002;
+				sky1.rotation.x +=0.003;
+				//sky2.material.map.rotation +=0.002;
+				//sky3.material.map.rotation -=0.003;
+        sky2.rotation.y -=0.0007;
+				sky3.rotation.z -=0.0003;
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+		</script>
+
+
+	</body>
+</html>

@@ -14,6 +14,17 @@
 		<script src="js/utils/BufferGeometryUtils.js"></script>
 		<script src="js/objects/Sky.js"></script>
 
+
+		<script src="js/postprocessing/EffectComposer.js"></script>
+		<script src="js/postprocessing/RenderPass.js"></script>
+    <script src="js/postprocessing/BokehPass.js"></script>
+
+
+		<script src="js/postprocessing/Pass.js"></script>
+
+		<script src="shaders/BokehShader.js"></script>
+
+
 		<script src="bsjs/bsSky.js"></script>
 	</head>
 
@@ -135,7 +146,7 @@
 			var mlib = {};
 
 			var sky;
-
+			var postprocessing = {};
 
 			init();
 			animate();
@@ -253,6 +264,7 @@
 				container.appendChild( renderer.domElement );
 
 
+				initPostprocessing();
 
 				// CONTROLS
 				controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -292,6 +304,7 @@
 				var delta = clock.getDelta();
         sky.update(delta/10.0);  //speed of the sunrise
 				sky.updateSphere(0);
+				sky.updateSphere(1);
 
 
 				if ( terrain.visible ) {
@@ -321,9 +334,26 @@
 					renderer.setRenderTarget( null );
 					renderer.render( scene, camera );
 				}
+				postprocessing.composer.render( 0.1 );
 			}
 
+			function initPostprocessing() {
+				var renderPass = new THREE.RenderPass( scene, camera );
+				var bokehPass = new THREE.BokehPass( scene, camera, {
+					focus: 1.0,
+					aperture:	0.025,
+					maxblur:	1.0,
+					width: SCREEN_WIDTH,
+					height: SCREEN_HEIGHT
+				} );
+				console.log(bokehPass);
+				var composer = new THREE.EffectComposer( renderer );
+				composer.addPass( renderPass );
+				composer.addPass( bokehPass );
+				postprocessing.composer = composer;
+				postprocessing.bokeh = bokehPass;
 
+			}
 
 
 		</script>
