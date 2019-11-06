@@ -13,6 +13,8 @@
 		<script src="js/shaders/TerrainShader.js"></script>
 		<script src="js/utils/BufferGeometryUtils.js"></script>
 		<script src="js/objects/Sky.js"></script>
+		<script src="js/objects/Water.js"></script>
+		
 	</head>
 
 	<body>
@@ -134,6 +136,10 @@
 			var clock = new THREE.Clock();
 			var updateNoise = true;
 			var mlib = {};
+			
+			// Water
+			var water;
+			
 
 			var sky;
 			var skyprop = {
@@ -163,15 +169,17 @@
 				// SCENE (FINAL)
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x050505 );
-				//scene.fog = new THREE.Fog( 0x050505, 2000, 4000 );
+				scene.fog = new THREE.Fog( 0x050505, 100, 12000 );
 				// LIGHTS
-				//scene.add( new THREE.AmbientLight( 0x111111 ) );
+				scene.add( new THREE.AmbientLight( 0x111111 ) );
 				directionalLight = new THREE.DirectionalLight( 0xffffff, 100.15 );
 				directionalLight.position.set( 500, 2000, 0 );
 				scene.add( directionalLight );
 				pointLight = new THREE.PointLight( 0xff4400, 1.5 );
 				pointLight.position.set( 0, 0, 0 );
-				//scene.add( pointLight );
+				scene.add( pointLight );
+				
+				
 				// HEIGHT + NORMAL MAPS
 				var normalShader =THREE.NormalMapShader;
 				var rx = 256, ry = 256;
@@ -253,7 +261,35 @@
         //SKY by bs
 
 				initSky();
+				
+				//WATER
+				var waterGeometry = new THREE.PlaneBufferGeometry( 10000, 10000 );
 
+				water = new THREE.Water(
+					waterGeometry,
+					{
+						textureWidth: 512,
+						textureHeight: 512,
+						waterNormals: new THREE.TextureLoader().load( 'res/waternormals.jpg', function ( texture ) {
+							texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+						} ),
+						alpha: 1.0,
+						//sunDirection: light.position.clone().normalize(),
+						sunColor: 0xffffff,
+						waterColor: 0x001e0f,
+						distortionScale: 3.7,
+						fog: scene.fog !== undefined,
+						
+						
+					}
+					
+				);
+				console.log(water);
+				
+				water.rotation.x = - Math.PI / 2;
+				
+				scene.add( water );
+				
 				// RENDERER
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -295,6 +331,12 @@
 
 			function render() {
 				var delta = clock.getDelta();
+				water.position= {x: 0, y: 100, z: 0};
+				water.material.uniforms['time'].value += delta;
+				console.log(water.material.uniforms);
+				water.material.uniforms['alpha'].value =0.9;
+				water.material.uniforms['size'].value =30;
+
 
         //sun update begin
         skyprop.inclination=skyprop.inclination+0.001;
@@ -307,9 +349,9 @@
 				sunSphere.position.y = skyprop.distance * Math.sin( phi ) * Math.sin( theta );
 				sunSphere.position.z = skyprop.distance * Math.sin( phi ) * Math.cos( theta );
 				var uniforms = sky.material.uniforms;
-				uniforms[ "sunPosition" ].value.copy( sunSphere.position );
+				//uniforms[ "sunPosition" ].value.copy( sunSphere.position );
 
-        directionalLight.position.set( -sunSphere.position.x, sunSphere.position.y, -sunSphere.position.z );
+        //directionalLight.position.set( -sunSphere.position.x, sunSphere.position.y, -sunSphere.position.z );
 				//console.log(sky);
 				//scene.fog.color.setHSL(0.54,0.5,THREE.Math.clamp((skyprop.inclination/2.0),0.1,1.0));
 
@@ -319,15 +361,15 @@
 					var fLow = 0.1, fHigh = 0.8;
 					lightVal = THREE.Math.clamp( lightVal + 0.5 * delta * lightDir, fLow, fHigh );
 					var valNorm = ( lightVal - fLow ) / ( fHigh - fLow );
-					//scene.background.setHSL( 0.1, 0.5, lightVal );
-					//scene.fog.color.setHSL( 0.1, 0.5, lightVal );
+					scene.background.setHSL( 0.1, 0.5, lightVal );
+					scene.fog.color.setHSL( 0.1, 0.5, lightVal );
 					directionalLight.intensity = THREE.Math.mapLinear( valNorm, 0, 1, 0.1, 1.15 );
 					pointLight.intensity = THREE.Math.mapLinear( valNorm, 0, 1, 0.9, 1.5 );
 					uniformsTerrain[ 'uNormalScale' ].value = THREE.Math.mapLinear( valNorm, 0, 1, 0.6, 3.5 );
 					if ( updateNoise ) {
-						animDelta = THREE.Math.clamp( animDelta + 0.00075 * animDeltaDir, 0, 0.05 );
+						animDelta = THREE.Math.clamp( animDelta + 0.00075 * animDeltaDir, 0, 0.008 );
 						uniformsNoise[ 'time' ].value += delta * animDelta;
-						uniformsNoise[ 'offset' ].value.x += delta * 0.05;
+						uniformsNoise[ 'offset' ].value.x += delta * 0.008;
 						uniformsTerrain[ 'uOffset' ].value.x = 4 * uniformsNoise[ 'offset' ].value.x;
 						quadTarget.material = mlib[ 'heightmap' ];
 						renderer.setRenderTarget( heightMap );
