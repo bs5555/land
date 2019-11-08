@@ -76,13 +76,51 @@
  }
 
  </script>
+
+ <script>
+class bsBuilding
+{
+	mesh;
+	geometry;
+	material;
+
+
+	constructor(x,y,z)
+	{
+     this.geometry = new THREE.BoxBufferGeometry( x, y, z );
+		 this.material = new THREE.MeshBasicMaterial( { color: 0x00ccff, wireframe: true } );
+		 this.mesh = new THREE.Mesh( this.geometry, this.material );
+	}
+
+	getMesh()
+	{
+		return(this.mesh);
+	}
+
+	moveMesh(x,y,z)
+	{
+		var position = new THREE.Vector3();
+	  this.mesh.position.x = x;
+		this.mesh.position.y = y;
+		this.mesh.position.z = z;
+	}
+
+
+}
+
+
+</script>
 		<script>
 
 			var camera, scene, renderer, controls;
 			var mesh;
 				var geometry = new THREE.BufferGeometry();
 				var vertices = [];
-				var segments = 50;
+				var segments = 100;
+
+        var b1 = new bsBuilding(1,1,1);
+
+
 			init();
 			animate();
 			function init() {
@@ -117,7 +155,6 @@
 					}
 				}
 
-				console.log(vertices);
 
 				// generate indices (data for element array buffer)
 				for ( var i = 0; i < segments; i ++ ) {
@@ -144,7 +181,6 @@
 				} );
 				mesh = new THREE.Mesh( geometry, material );
 				scene.add( mesh );
-				mesh.rotateX(90);
 				//
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -160,6 +196,10 @@ controls.panSpeed = 0.8;
 controls.staticMoving = false;
 controls.dynamicDampingFactor = 0.1;
 controls.keys = [ 65, 83, 68 ];
+
+//add object
+
+scene.add(b1.getMesh());
 
 				//
 				window.addEventListener( 'resize', onWindowResize, false );
@@ -204,8 +244,9 @@ controls.keys = [ 65, 83, 68 ];
 function realtime()
 {
 
+  //constructing an array of perl noise
 	var noise = array2D(segments+1,segments+1,0);
-	var noisesize = (Math.random()*10)+10;
+	var noisesize = (Math.random()*10)+4 ;
 	for(var x = 0; x<segments+1; x++)
 	{
 		for(var y = 0; y<segments+1; y++)
@@ -215,7 +256,7 @@ function realtime()
 	}
 
 	var noise1 = array2D(segments+1,segments+1,0);
-	var noisesize = Math.random()*5;
+	var noisesize = (Math.random()*4);
 	for(var x = 0; x<segments+1; x++)
 	{
 		for(var y = 0; y<segments+1; y++)
@@ -225,9 +266,10 @@ function realtime()
 	}
 
 
-
-	var noisescale = (Math.random()*4)+1;
+  //scale and copy the noise data to mesh geometry
+	var noisescale = (Math.random()*2.0);
 	var noisescale1 = (Math.random()*20)-10;
+
 	for(var i = -1; i < vertices.length; i=i+3)
 	{
 		if(i>0)
@@ -237,10 +279,15 @@ function realtime()
 				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale1)
 			);
 		}
+		if(i<9001)
+		{		
+			b1.moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+
+		}
 
 	}
 	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  mesh.geometry.attributes.position.needsUpdate = true;
+
 }
 
 		</script>
