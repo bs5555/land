@@ -117,8 +117,15 @@ class bsBuilding
 				var geometry = new THREE.BufferGeometry();
 				var vertices = [];
 				var segments = 100;
+				var bld = [];
 
-        var b1 = new bsBuilding(1,1,1);
+        for(var i=0; i<30; i++)
+				{
+				  bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
+				}
+
+
+
 
 
 			init();
@@ -199,7 +206,11 @@ controls.keys = [ 65, 83, 68 ];
 
 //add object
 
-scene.add(b1.getMesh());
+for(var i=0; i<30; i++)
+{
+	scene.add(bld[i].getMesh());
+}
+
 
 				//
 				window.addEventListener( 'resize', onWindowResize, false );
@@ -279,11 +290,11 @@ function realtime()
 				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale1)
 			);
 		}
-		if(i<9001)
-		{		
-			b1.moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+		console.log(i);
+		if(i==16157) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
 
-		}
 
 	}
 	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
