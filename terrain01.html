@@ -195,14 +195,14 @@ class bsBuilding
 				document.body.appendChild( renderer.domElement );
 
 				// controls
-controls = new THREE.TrackballControls( camera, renderer.domElement );
-controls.zoom=0.05;
-controls.rotateSpeed = 2.0;
-controls.zoomSpeed = 0.2;
-controls.panSpeed = 0.8;
-controls.staticMoving = false;
-controls.dynamicDampingFactor = 0.1;
-controls.keys = [ 65, 83, 68 ];
+        controls = new THREE.TrackballControls( camera, renderer.domElement );
+        controls.zoom=0.05;
+        controls.rotateSpeed = 2.0;
+        controls.zoomSpeed = 0.2;
+        controls.panSpeed = 0.8;
+        controls.staticMoving = false;
+        controls.dynamicDampingFactor = 0.1;
+        controls.keys = [ 65, 83, 68 ];
 
 //add object
 
@@ -291,7 +291,7 @@ function realtime()
 			);
 		}
 		console.log(i);
-		if(i==16157) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+		if(i==1 ) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
     if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
     if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
 

@@ -19,7 +19,7 @@
 		<script type="module">
 			import * as THREE from '../build/three.module.js';
 			import { TrackballControls } from './jsm/controls/TrackballControls.js';
-			var camera, scene, renderer, controls;
+			var camera, scene, renderer, controls, light;
 			init();
 			animate();
 			function init() {
@@ -41,7 +41,7 @@
 				controls.keys = [ 65, 83, 68 ];
 
 				scene.add( new THREE.AmbientLight( 0x222222 ) );
-				var light = new THREE.PointLight( 0xffffff );
+				light = new THREE.PointLight( 0xffffff );
 				light.position.copy( camera.position );
 				scene.add( light );
 				//
@@ -150,18 +150,31 @@ geometry.vertices.push(
 
 
 				var shape = new THREE.Shape( );
-		   shape.moveTo(20.0, 10.0);
-		   shape.bezierCurveTo(26.0, 10.0, 30.0, 14.0, 30.0, 20.0);
-		   shape.bezierCurveTo(30.0, 26.0, 26.0, 30.0, 20.0, 30.0);
-		   shape.bezierCurveTo(14.0, 30.0, 10.0, 26.0, 10.0, 20.0);
-		   shape.bezierCurveTo(10.0, 14.0, 14.0, 10.0, 20.0, 10.0);
+		   //shape.moveTo(20.0, 10.0);
+		   //shape.bezierCurveTo(26.0, 10.0, 30.0, 14.0, 30.0, 20.0);
+		   //shape.bezierCurveTo(30.0, 26.0, 26.0, 30.0, 20.0, 30.0);
+		   //shape.bezierCurveTo(14.0, 30.0, 10.0, 26.0, 10.0, 20.0);
+		   //shape.bezierCurveTo(10.0, 14.0, 14.0, 10.0, 20.0, 10.0);
+
+			 var shape = new THREE.Shape( );
+			 var shape = new THREE.Shape( );
+		   shape.moveTo(20.1, 10);
+		   shape.bezierCurveTo(20, 10, 30, 10, 30, 10);
+		   shape.bezierCurveTo(30, 10, 40, 10, 30, 20);
+		   shape.bezierCurveTo(20, 30, 20, 20, 20, 20);
+		   shape.bezierCurveTo(20, 20, 20, 10, 20, 10);
 
 
 
 
 
 
-				var materials = [ new THREE.MeshBasicMaterial( {color: 0x00ccff, wireframe: true } ), new THREE.MeshBasicMaterial( {color: 0xff0000, wireframe: true } ) ];
+			 								
+
+				var materials = [
+					 new THREE.MeshLambertMaterial( {color: 0x663333, specular: 0xddcccc, reflectivity: 0.8, shininess: 0.8, wireframe: false } ),
+					 new THREE.MeshLambertMaterial( {color:0xddccaa , specular: 0xffffff, reflectivity: 0.3, shininess: 0.4, wireframe: false } )
+				];
 				var extrudeSettings = {
 					depth: 10,
 					steps: 1,
@@ -171,6 +184,7 @@ geometry.vertices.push(
 					bevelSegments: 1
 				};
 				var geometry = new THREE.ExtrudeBufferGeometry( shape, extrudeSettings );
+				geometry.center();
 				var mesh = new THREE.Mesh( geometry, materials );
 				mesh.position.set( 0, 0, 0 );
 				scene.add( mesh );
@@ -178,6 +192,7 @@ geometry.vertices.push(
 			function animate() {
 				requestAnimationFrame( animate );
 				controls.update();
+				light.position.copy( camera.position );
 				renderer.render( scene, camera );
 			}
 		</script>
