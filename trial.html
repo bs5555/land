@@ -1,0 +1,131 @@
+<html>
+	<head>
+		<title>Matt</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 90, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			var cameraP, ssaaRenderPassP;
+			var cameraO, ssaaRenderPassO;
+			var aspect = window.innerWidth / window.innerHeight;
+
+			var geometry = new THREE.BoxGeometry( 70, 200, 0.001);
+			var geometry2 = new THREE.BoxGeometry( 70, 200, 0.001 );
+			var geometry3 = new THREE.BoxGeometry( 70, 200, 0.001 );
+			var geometry4 = new THREE.BoxGeometry( 70, 200, 0.001 );
+			var material = new THREE.MeshPhongMaterial( { color: 0x00ffff, specular: 0x666666, emissive: 0x115599, shininess: 1, opacity: 0.3, transparent: true } );
+			var material2 = new THREE.MeshPhongMaterial( { color: 0x484ff0, specular: 0x666600, emissive: 0x115599, shininess: 1, opacity: 0.3, transparent: true } );
+			var material3 = new THREE.MeshPhongMaterial( { color: 0xffcf4d, specular: 0x666600, emissive: 0x115599, shininess: 1, opacity: 0.3, transparent: true } );
+			var material4 = new THREE.MeshPhongMaterial( { color: 0x03fc0f, specular: 0x666600, emissive: 0x115599, shininess: 1, opacity: 0.3, transparent: true } );
+			
+			var cube = new THREE.Mesh( geometry, material2 );
+			scene.add( cube );
+			var cube2 = new THREE.Mesh( geometry2, material );
+			scene.add( cube2 );
+			var cube3 = new THREE.Mesh( geometry3, material3 );
+			scene.add( cube3 );
+			var cube4 = new THREE.Mesh( geometry4, material4 );
+			scene.add( cube4 );
+			camera.position.z = 5;
+			
+			
+			
+			// postprocessing
+			cameraP = new THREE.PerspectiveCamera( 65, aspect, 3, 10 );
+				cameraP.position.z = 7;
+				cameraO = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 3, 10 );
+				cameraO.position.z = 7;
+				var fov = THREE.Math.degToRad( cameraP.fov );
+				var hyperfocus = ( cameraP.near + cameraP.far ) / 2;
+				var _height = 2 * Math.tan( fov / 2 ) * hyperfocus;
+				cameraO.zoom = window.innerHeight / _height;
+			
+				//composer = new THREE.EffectComposer( renderer );
+				//composer.setPixelRatio( 1 ); // ensure pixel ratio is always 1 for performance reasons
+				//ssaaRenderPassP = new THREE.SSAARenderPass( scene, cameraP );
+				//composer.addPass( ssaaRenderPassP );
+				//ssaaRenderPassO = new THREE.SSAARenderPass( scene, cameraO );
+				//composer.addPass( ssaaRenderPassO );
+				//copyPass = new THREE.ShaderPass( CopyShader );
+				//composer.addPass( copyPass );
+			
+			/*var textureLoader = new THREE.TextureLoader();
+			textureLoader.load( 'res/galaxy.jpg', function ( texture ) {
+				texture.mapping = THREE.UVMapping;
+				init( texture );
+				animate();
+				});*/
+			
+			var animate = function () {
+				requestAnimationFrame( animate );
+
+				cube.rotation.x += 0.002;
+				cube.rotation.y += 0.001;
+
+				cube2.rotation.x -= 0.002;
+				cube2.rotation.y += 0.003;
+				
+				cube3.rotation.x -= 0.002;
+				cube3.rotation.y -= 0.002;
+				
+				cube3.rotation.x += 0.001;
+				cube3.rotation.y -= 0.002;
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+			
+			scene.background = new THREE.Color( 0xfab7ff );
+			//scene.fog = new THREE.FogExp2( 000000, .001 );
+			// Lights
+			
+			var light = new THREE.PointLight( 0xffe100, 1);
+				light.position.z = 70;
+				light.position.y = - 70;
+				light.position.x = - 70;
+				scene.add( light );
+				var light2 = new THREE.PointLight( 0x00f2ff, 1 );
+				light2.position.z = 70;
+				light2.position.x = - 70;
+				light2.position.y = 70;
+				scene.add( light2 );
+				var light3 = new THREE.PointLight( 0xee00ff, 1 );
+				light3.position.z = 70;
+				light3.position.x = 70;
+				light3.position.y = - 70;
+				scene.add( light3 );
+				var light4 = new THREE.AmbientLight( 0xff0000, 1 );
+				scene.add( light4 );
+
+			
+				scene.add( new THREE.AmbientLight( 0x111111 ) );
+				var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
+				/*directionalLight.position.x = Math.random() - 0.5;
+				directionalLight.position.y = Math.random() - 0.5;
+				directionalLight.position.z = Math.random() - 0.5;
+				directionalLight.position.normalize();
+				scene.add( directionalLight );
+				pointLight = new THREE.PointLight( 0xffffff, 1 );
+				scene.add( pointLight );
+				pointLight.add( new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 1 ), new THREE.MeshBasicMaterial( { color: 0xffffff } ) ) );
+				//
+				*/
+				
+				
+
+		</script>
+	</body>
+</html>
