@@ -1,34 +1,67 @@
 <html>
 	<head>
-		<title>My first three.js app</title>
+		<title>Word generator</title>
 		<style>
 			body { margin: 0; }
 			canvas { width: 100%; height: 100% }
 		</style>
 	</head>
 	<body>
-		<script src="js/three.js"></script>
-		<script>
-			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+		<script type="module">
+		 //import modules
+     import * as THREE from '../build/three.module.js';
+		 import { TrackballControls } from './jsm/controls/TrackballControls.js';
 
-			var renderer = new THREE.WebGLRenderer();
+		 //superglobals
+		 var scene;    //scene
+		 var camera;   //camera
+		 var renderer; //renderer
+		 var controls; //renderer
+		 var light;    //lights
+
+    //init function
+     var init = function()
+		 {
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
+      camera.position.z = 15;
+
+			renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
 
-			var geometry = new THREE.BoxGeometry( 2, 1, 3 );
-			var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-			var cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
+			controls = new TrackballControls( camera, renderer.domElement );
+			controls.zoom=0.05;
+			controls.rotateSpeed = 2.0;
+			controls.zoomSpeed = 0.2;
+			controls.panSpeed = 0.8;
+			controls.staticMoving = false;
+			controls.dynamicDampingFactor = 0.1;
+			controls.keys = [ 65, 83, 68 ];
 
-			camera.position.z = 5;
+      //lights
+			scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+			light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
+			light.position.copy( camera.position );
+			scene.add( light );
+
+
+		}
+		init();
+
+
+
+		var geometry = new THREE.BoxGeometry( 2, 1, 3 );
+		var material = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+		var cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
+
+
 
 			var animate = function () {
-				requestAnimationFrame( animate );
-
-				cube.rotation.x += 0.01;
-				cube.rotation.y += 0.01;
-
+				requestAnimationFrame(animate);
+				controls.update();
+				light.position.copy(camera.position);
 				renderer.render( scene, camera );
 			};
 
