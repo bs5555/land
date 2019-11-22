@@ -1,0 +1,165 @@
+<html>
+	<head>
+		<title>Word generator</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script type="module">
+		//import modules
+	  import * as THREE from '../build/three.module.js';
+	  import { TrackballControls } from './jsm/controls/TrackballControls.js';
+    import { ConvexHull } from './jsm/math/ConvexHull.js';
+
+
+
+
+		 function Rock(size)
+		 {
+
+			 function randomFloat(min = 0, max = 1) {
+			         if (!max) {
+			             return Math.random() * min;
+			         } else {
+			             return Math.random() * (max - min) + min;
+			         }
+			     }
+
+    size = size || 2;
+    let pointCount = 40; //Util.randomInt(10, 10);
+
+    let points = [];
+    let min = -size,
+        max = size;
+    for (var i = 0; i <= pointCount; i++) {
+        points.push([
+            randomFloat(min, max),
+            randomFloat(min, max),
+            randomFloat(min, max),
+        ]);
+    }
+
+    // console.log(points);
+
+    // let outline = qh(points, {skipTriangulation: true });
+    //let outline = qh(points); //.reduce((a, b) => a.concat(b)).map(i => points[i]).reduce((a, b) => a.concat(b));
+    let outline = new ConvexHull(points);
+
+    let geometry = new THREE.BufferGeometry();
+
+    // let geometry = new THREE.Geometry();
+
+    // let vertices = new Float32Array(outline);
+
+    // geometry.addAttribute( 'uniforms', {
+    //         time: { value: 1.0 },
+    //         resolution: { value: new THREE.Vector2() }
+    //     });
+
+    // uniforms: {
+    //     time: { value: 1.0 },
+    //     resolution: { value: new THREE.Vector2() }
+    // },
+    // attributes: {
+    //     vertexOpacity: { value: [] }
+    // },
+    geometry.vertices = points.map(p => {
+        return new THREE.Vector3(p[0], p[1], p[2]);
+    });
+
+    let vertices = new Float32Array(points.reduce((a, b) => a.concat(b)));
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+    let indices = new Uint16Array(outline.reduce((a, b) => a.concat(b)));
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+
+
+    let markers = new THREE.Object3D();
+
+    points.forEach(f => {
+        let cross = Cross(0.5);
+
+        cross.position.x = f[0];
+        cross.position.y = f[1];
+        cross.position.z = f[2];
+
+        markers.add(cross);
+    });
+
+    let material = new THREE.MeshLambertMaterial({
+        color: 0xf4e0c5,
+        shading: THREE.SmoothShading,
+    });
+
+    let mesh = new THREE.Mesh(geometry, Materials.EARTH);
+;
+
+    return mesh;
+}
+
+
+
+		 //superglobals
+		 var scene;    //scene
+		 var camera;   //camera
+		 var renderer; //renderer
+		 var controls; //renderer
+		 var light;    //lights
+
+    //init function
+     var init = function()
+		 {
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
+      camera.position.z = 15;
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			controls = new TrackballControls( camera, renderer.domElement );
+			controls.zoom=0.05;
+			controls.rotateSpeed = 2.0;
+			controls.zoomSpeed = 0.2;
+			controls.panSpeed = 0.8;
+			controls.staticMoving = false;
+			controls.dynamicDampingFactor = 0.1;
+			controls.keys = [ 65, 83, 68 ];
+
+      //lights
+			scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+			light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
+			light.position.copy( camera.position );
+			scene.add( light );
+
+
+		}
+		init();
+
+
+     var rock=Rock(10);
+
+		var geometry = new THREE.BoxGeometry( 2, 1, 3 );
+		var material = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+		var cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
+
+
+
+			var animate = function () {
+				requestAnimationFrame(animate);
+				controls.update();
+				light.position.copy(camera.position);
+				renderer.render( scene, camera );
+			};
+
+			animate();
+		</script>
+	</body>
+</html>

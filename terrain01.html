@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
 	<head>
 		<title>three.js webgl - buffergeometry - indexed</title>
@@ -9,8 +9,6 @@
 				color: #08f;
 			}
 		</style>
-		<script src="js/three.js"></script>
-		<script src="js/controls/TrackballControls.js"></script>
 	</head>
 	<body>
 
@@ -77,7 +75,10 @@
 
  </script>
 
- <script>
+ <script type="module">
+
+
+
 class bsBuilding
 {
 	mesh;
@@ -85,10 +86,12 @@ class bsBuilding
 	material;
 
 
+
+
 	constructor(x,y,z)
 	{
      this.geometry = new THREE.BoxBufferGeometry( x, y, z );
-		 this.material = new THREE.MeshBasicMaterial( { color: 0x00ccff, wireframe: true } );
+		 this.material = new THREE.MeshPhongMaterial( { color: 0x00ccff, wireframe: false } );
 		 this.mesh = new THREE.Mesh( this.geometry, this.material );
 	}
 
@@ -109,17 +112,25 @@ class bsBuilding
 }
 
 
-</script>
-		<script>
 
-			var camera, scene, renderer, controls;
+		import * as THREE from '../build/three.module.js';
+		import { TrackballControls } from './jsm/controls/TrackballControls.js';
+
+		import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
+					import { RenderPass } from './jsm/postprocessing/RenderPass.js';
+					import { SAOPass } from './jsm/postprocessing/SAOPass.js';
+
+
+			var camera, scene, renderer, controls, light;
 			var mesh;
+      var composer, renderPass, saoPass;
+
 				var geometry = new THREE.BufferGeometry();
 				var vertices = [];
 				var segments = 100;
 				var bld = [];
 
-        for(var i=0; i<30; i++)
+        for(var i=0; i<1000; i++)
 				{
 				  bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
 				}
@@ -137,8 +148,14 @@ class bsBuilding
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x050505 );
 				//
-				var light = new THREE.HemisphereLight();
+				var light1 = new THREE.HemisphereLight();
+				//scene.add( light1 );
+
+				scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+				light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
+				light.position.copy( camera.position );
 				scene.add( light );
+
 				//
 
 				var indices = [];
@@ -183,7 +200,7 @@ class bsBuilding
 				var material = new THREE.MeshPhongMaterial( {
 					side: THREE.DoubleSide,
 					vertexColors: THREE.VertexColors,
-					wireframe : true
+					wireframe : false
 
 				} );
 				mesh = new THREE.Mesh( geometry, material );
@@ -195,7 +212,7 @@ class bsBuilding
 				document.body.appendChild( renderer.domElement );
 
 				// controls
-        controls = new THREE.TrackballControls( camera, renderer.domElement );
+        controls = new TrackballControls( camera, renderer.domElement );
         controls.zoom=0.05;
         controls.rotateSpeed = 2.0;
         controls.zoomSpeed = 0.2;
@@ -204,9 +221,18 @@ class bsBuilding
         controls.dynamicDampingFactor = 0.1;
         controls.keys = [ 65, 83, 68 ];
 
+				//postprocessing
+				composer = new EffectComposer( renderer );
+				renderPass = new RenderPass( scene, camera );
+				composer.addPass( renderPass );
+				saoPass = new SAOPass( scene, camera, false, true );
+				composer.addPass( saoPass );
+				saoPass.params.saoIntensity=0.0005;
+        saoPass.params.saoBlurRadius=10;
+
 //add object
 
-for(var i=0; i<30; i++)
+for(var i=0; i<bld.length; i++)
 {
 	scene.add(bld[i].getMesh());
 }
@@ -228,6 +254,8 @@ for(var i=0; i<30; i++)
 				requestAnimationFrame( animate );
 				render();
         controls.update();
+				light.position.copy(camera.position);
+				composer.render();
 
 			}
 			function render() {
@@ -251,6 +279,12 @@ for(var i=0; i<30; i++)
 		 }
 		 return arr;
 	}
+
+function coords(x,y)
+{
+    var adress =((y*(segments+1))+x)*3;
+    return({x:vertices[adress],y:vertices[adress+1],z:vertices[adress+2]});
+}
 
 function realtime()
 {
@@ -280,7 +314,7 @@ function realtime()
   //scale and copy the noise data to mesh geometry
 	var noisescale = (Math.random()*2.0);
 	var noisescale1 = (Math.random()*20)-10;
-
+  //console.log(vertices);
 	for(var i = -1; i < vertices.length; i=i+3)
 	{
 		if(i>0)
@@ -289,15 +323,41 @@ function realtime()
 				((noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale)+
 				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale1)
 			);
+
 		}
-		console.log(i);
-		if(i==1 ) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
-    if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
-    if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+
+		//if(i==1 ) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    //if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    //if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
 
 
-	}
+  }
 	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+  var i = 0;
+  for(x=0; x<segments; x++)
+  {
+    for(y=0; y<segments; y++)
+    {
+      if(noise[x][y]<0.4 && i<bld.length)
+      {
+        var pos = coords(x,y);
+        bld[i].moveMesh(pos.x,pos.y,pos.z);
+        i++;
+      }
+    }
+
+  }
+
+	/*var pos = coords(0,0);
+	bld[0].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(segments,0);
+	bld[1].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(0,segments);
+	bld[2].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(segments,segments);
+	bld[3].moveMesh(pos.x,pos.y,pos.z);
+	console.log(pos);*/
+
 
 }
 

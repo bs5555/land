@@ -301,12 +301,13 @@
 			function render() {
 				var delta = clock.getDelta();
 				//cubeMesh.position.set = (delta,120,0);
-				cubeMesh.position.set(-counter*3.4,200,0);
+				//cubeMesh.position.set(-counter*3.4,200,0);
 				if(counter > 400) {counter=-400; console.log('coucou');}
 				console.log(counter);
         sky.update(delta/10.0);  //speed of the sunrise
 				sky.updateSphere(0);
 				counter++;
+
 
 
 				if ( terrain.visible ) {
@@ -324,7 +325,6 @@
 						uniformsNoise[ 'offset' ].value.x += delta * 0.05;
 						uniformsTerrain[ 'uOffset' ].value.x = 4 * uniformsNoise[ 'offset' ].value.x;
 						quadTarget.material = mlib[ 'heightmap' ];
-						console.log(mlib);
 						renderer.setRenderTarget( heightMap );
 						renderer.clear();
 						renderer.render( sceneRenderTarget, cameraOrtho );

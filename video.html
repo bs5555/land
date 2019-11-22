@@ -7,7 +7,7 @@
 		</style>
 	</head>
 	<body>
-		<video id="video" loop crossOrigin="anonymous" webkit-playsinline style="display:none">
+		<video id="video" muted loop crossOrigin="anonymous" webkit-playsinline style="display:none">
 			<source src="res/sintel.ogv" type='video/ogg; codecs="theora, vorbis"'>
 			<source src="res/sintel.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
 		</video>
@@ -55,9 +55,12 @@
 
 
 
+		var video = document.getElementById( 'video' );
+ 		video.play();
+ 		var texture = new THREE.VideoTexture( video );
 
-		var geometry = new THREE.BoxGeometry( 2, 1, 3 );
-		var material = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshPhongMaterial( { color: 0xffffff , map:texture} );
 		var cube = new THREE.Mesh( geometry, material );
 		scene.add( cube );
 
