@@ -101,7 +101,7 @@
 			controls.dynamicDampingFactor = 0.1;
 			controls.keys = [ 65, 83, 68 ];
       //lights
-			scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+			scene.add( new THREE.AmbientLight( 0x666666 ) ); //some ambient to see int the dark
 			light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
 			light.position.copy( camera.position );
 			scene.add( light );
@@ -109,53 +109,142 @@
 		init();
      //var rock=Rock(10);
 
-     class rock
+     class blob
 		 {
+			 mesh;
+			 mesh2;
+			 geometry;
 			 material;
 			 rude;
 			 subrocks;
-			 xs;
-			 ys;
-			 rock(r,mat,sub,x,y)
+			 scaleX;
+			 scaleY;
+			 scaleZ;
+			 segments
+
+			 constructor(mat)
 			 {
 				 this.material=mat;
-				 this.rude=r;
+				 this.rude=2.5;
 				 this.subrocks=0;
-				 this.xs=x;
-				 this.ys=u;
-				 var sphere_geometry = new THREE.SphereGeometry(1, 8, 8);
-				 for (var i = 0; i < sphere.geometry.vertices.length; i++)
+				 this.scaleX=1.0;
+				 this.scaleY=1.0;
+				 this.scaleZ=1.0;
+				 this.segments=4;
+			 }
+
+       get()
+			 {
+				 this.geometry= new THREE.SphereGeometry(1, this.segments, this.segments);
+				 for (var i = 0; i < this.geometry.vertices.length; i++)
 		 		 {
-		       var p = sphere.geometry.vertices[i];
-		 			 p.x=p.x+(Math.random()/this.r)*xs;
-		 			 p.y=p.y*ys;
+		       var p = this.geometry.vertices[i];
+		 			 p.x=p.x+(Math.random()/this.rude)*this.scaleX;
+		 			 p.y=p.y+(Math.random()/this.rude)*this.scaleY;
+					 p.z=p.z*this.scaleZ;
 		       //p.normalize().multiplyScalar(Math.random()/4.0);
 		     }
-				 var sphere = new THREE.Mesh(sphere_geometry, this.material);
-				 return(sphere);
+				 this.geometry.computeVertexNormals();
+		     this.geometry.normalsNeedUpdate = true;
+		     this.geometry.verticesNeedUpdate = true;
+				 this.mesh = new THREE.Mesh(this.geometry, this.material);
+				 return(this.mesh);
+			 }
+
+			 move(x,y,z)
+			 {
+				 var position = new THREE.Vector3();
+				 this.mesh.position.x = x;
+				 this.mesh.position.y = y;
+				 this.mesh.position.z = z;
 			 }
 		 }
 
-
-		var material = new THREE.MeshLambertMaterial( { color: 0xff0000, wireframe:false } );
-		//var material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
-		scene.add(new rock(0.4,material,0,1,2));
-
-		var k = 3;
-    for (var i = 0; i < sphere.geometry.vertices.length; i++)
+    class blobGroup
 		{
-      var p = sphere.geometry.vertices[i];
-			console.log(p);
-			p.x=p.x+Math.random()/1.5;
-			p.y=p.y*2.0;
-      //p.normalize().multiplyScalar(Math.random()/4.0);
-    }
-    sphere.geometry.computeVertexNormals();
-    sphere.geometry.normalsNeedUpdate = true;
-    sphere.geometry.verticesNeedUpdate = true;
+			group;
+		  meshes;
+			level;
+			c;
+			material;
 
-		var helper = new THREE.VertexNormalsHelper( sphere, 0.2, 0x00ff00, 1 );
-		scene.add( helper );
+			constructor(mat,l)
+			{
+				this.material=mat;
+				this.level=l;
+				this.c=0;
+				this.group=new THREE.Group();
+				this.xblob();
+			}
+
+			xblob()
+			{
+				this.level--;
+				if(this.level>0)
+				{
+			    this.meshes[this.c]=new blob(this.material);
+					this.group.add(this.meshes[this.c]);
+					this.c++;
+				}
+				blob();
+			}
+
+			move(x,y,z)
+			{
+				var position = new THREE.Vector3();
+				this.mesh.position.x = x;
+				this.mesh.position.y = y;
+				this.mesh.position.z = z;
+			}
+
+			get()
+			{
+				console.log(this.group);
+				return(this.group);
+			}
+		}
+
+
+		 // load a texture, set wrap mode to repeat
+ var texture = new THREE.TextureLoader().load( "res/grasslight-big-nm.jpg" );
+ texture.wrapS = THREE.RepeatWrapping;
+ texture.wrapT = THREE.RepeatWrapping;
+ texture.repeat.set( 10, 10);
+
+
+		//material.map=texture;
+
+		//var material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
+
+    var g=new blobGroup(10)
+		//scene.add(g.get());
+
+    for(var x = -5; x<5; x++)
+		{
+			for(var y = -5; y<5; y++)
+			{
+				//roughness 1.0-10.0  rough -> smooth
+				//material
+				//subrocks 0 for now
+				var hue = Math.floor((Math.random()*50)+1);
+				var material = new THREE.MeshStandardMaterial( { color: new THREE.Color("hsl("+hue+",50%,50%)"), roughness:1.0, flatShading:true, wireframe:false } );
+				//material.normalMap=texture;
+				var r=new blob(material);
+				r.scaleZ=(y+6)/3;
+				r.segments=x+6;
+
+			  scene.add(r.get());
+				r.move(x*3,y*3,0);
+			}
+		}
+
+
+
+
+
+
+		//var helper = new THREE.VertexNormalsHelper( sphere, 0.2, 0x00ff00, 1 );
+		//scene.add( helper );
 		//var helper1 = new THREE.FaceNormalsHelper( cube, 2, 0x0000ff, 1 );
 		//scene.add( helper1 );
 			var animate = function () {
