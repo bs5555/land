@@ -11,11 +11,11 @@
 		//import modules
 	  import * as THREE from '../build/three.module.js';
 	  import { TrackballControls } from './jsm/controls/TrackballControls.js';
-    import { ConvexHull } from './jsm/math/ConvexHull.js';
+    import icomesh from './bsjs/icomesh.js';
 
 
 
-
+/*
 		 function Rock(size)
 		 {
 
@@ -102,7 +102,7 @@
 
     return mesh;
 }
-
+*/
 
 
 		 //superglobals
@@ -143,12 +143,36 @@
 		init();
 
 
-     var rock=Rock(10);
+     //var rock=Rock(10);
+     var rock = icomesh(1,true);
+     var geometry = new THREE.BufferGeometry();
+     var indices1= [];
+     for(var i=0; i<rock.triangles.length; i++)
+     {
+       indices1[i]=rock.triangles[i];
+     }
+     for(var i=0; i<rock.vertices.length; i++)
+     {
+       rock.vertices[i]=rock.vertices[i]+(Math.random()/2.0);
+     }
 
-		var geometry = new THREE.BoxGeometry( 2, 1, 3 );
-		var material = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+     geometry.setIndex( indices1 );
+		 geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( rock.vertices, 3 ) );
+		 //geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( rock.uv, 3 ) );
+     geometry.computeVertexNormals();
+
+     console.log(geometry);
+
+		console.log(geometry);
+    var material = new THREE.MeshLambertMaterial( { color: 0xff0000, wireframe:false } );
+		//var material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
 		var cube = new THREE.Mesh( geometry, material );
 		scene.add( cube );
+		var helper = new THREE.VertexNormalsHelper( cube, 0.2, 0x00ff00, 1 );
+		scene.add( helper );
+
+		//var helper1 = new THREE.FaceNormalsHelper( cube, 2, 0x0000ff, 1 );
+		//scene.add( helper1 );
 
 
 
