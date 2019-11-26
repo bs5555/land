@@ -116,11 +116,10 @@
 			 geometry;
 			 material;
 			 rude;
-			 subrocks;
 			 scaleX;
 			 scaleY;
 			 scaleZ;
-			 segments
+			 segments;
 
 			 constructor(mat)
 			 {
@@ -133,14 +132,14 @@
 				 this.segments=4;
 			 }
 
-       get()
+			 make()
 			 {
 				 this.geometry= new THREE.SphereGeometry(1, this.segments, this.segments);
 				 for (var i = 0; i < this.geometry.vertices.length; i++)
 		 		 {
 		       var p = this.geometry.vertices[i];
-		 			 p.x=p.x+(Math.random()/this.rude)*this.scaleX;
-		 			 p.y=p.y+(Math.random()/this.rude)*this.scaleY;
+		 			 p.x=(p.x+(Math.random()/this.rude))*this.scaleX;
+		 			 p.y=(p.y+(Math.random()/this.rude))*this.scaleY;
 					 p.z=p.z*this.scaleZ;
 		       //p.normalize().multiplyScalar(Math.random()/4.0);
 		     }
@@ -148,6 +147,10 @@
 		     this.geometry.normalsNeedUpdate = true;
 		     this.geometry.verticesNeedUpdate = true;
 				 this.mesh = new THREE.Mesh(this.geometry, this.material);
+			 }
+
+       get()
+			 {
 				 return(this.mesh);
 			 }
 
@@ -167,6 +170,11 @@
 			level;
 			c;
 			material;
+			rude;
+			scaleX;
+			scaleY;
+			scaleZ;
+			segments;
 
 			constructor(mat,l)
 			{
@@ -174,19 +182,37 @@
 				this.level=l;
 				this.c=0;
 				this.group=new THREE.Group();
-				this.xblob();
+				this.meshes=[];
+
+				this.rude=2.5;
+				this.scaleX=1.0;
+
+				this.scaleY=1.0;
+				this.scaleZ=1.0;
+				this.segments=4;
 			}
 
 			xblob()
 			{
+				console.log(this.level);
 				this.level--;
 				if(this.level>0)
 				{
 			    this.meshes[this.c]=new blob(this.material);
-					this.group.add(this.meshes[this.c]);
+					this.meshes[this.c].segments=this.segments-this.c;
+					//this.meshes[this.c].scaleX=this.scaleX/this.c;
+					//this.meshes[this.c].scaleY=this.scaleY/this.c;
+					//this.meshes[this.c].scaleZ=this.scaleZ/this.c;
+					this.meshes[this.c].make();
+					this.meshes[this.c].move(this.c,0,0);
+
+					console.log(this.meshes[this.c].get());
+
+					this.group.add(this.meshes[this.c].get());
 					this.c++;
+					this.xblob();
 				}
-				blob();
+
 			}
 
 			move(x,y,z)
@@ -199,6 +225,7 @@
 
 			get()
 			{
+				this.xblob();
 				console.log(this.group);
 				return(this.group);
 			}
@@ -206,17 +233,22 @@
 
 
 		 // load a texture, set wrap mode to repeat
- var texture = new THREE.TextureLoader().load( "res/grasslight-big-nm.jpg" );
- texture.wrapS = THREE.RepeatWrapping;
- texture.wrapT = THREE.RepeatWrapping;
- texture.repeat.set( 10, 10);
+  var texture = new THREE.TextureLoader().load( "res/grasslight-big-nm.jpg" );
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set( 10, 10);
 
-
+  var material = new THREE.MeshStandardMaterial( { color: 0x00ccff, roughness:1.0, flatShading:true, wireframe:false } );
 		//material.map=texture;
 
 		//var material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
 
-    var g=new blobGroup(10)
+    var g=new blobGroup(material,10);
+		g.rude=2.5;
+		g.scaleX=1.0;
+		g.scaleY=1.0;
+		g.scaleZ=1.0;
+		g.segments=6;
 		//scene.add(g.get());
 
     for(var x = -5; x<5; x++)
@@ -228,13 +260,14 @@
 				//subrocks 0 for now
 				var hue = Math.floor((Math.random()*50)+1);
 				var material = new THREE.MeshStandardMaterial( { color: new THREE.Color("hsl("+hue+",50%,50%)"), roughness:1.0, flatShading:true, wireframe:false } );
-				//material.normalMap=texture;
+			  material.normalMap=texture;
 				var r=new blob(material);
-				r.scaleZ=(y+6)/3;
+				r.scaleY=(y+6)/3;
 				r.segments=x+6;
-
+        r.rude=4.0;
+				r.make();
 			  scene.add(r.get());
-				r.move(x*3,y*3,0);
+				r.move(x*3,0,y*3);
 			}
 		}
 
