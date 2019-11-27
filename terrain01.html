@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
 	<head>
 		<title>three.js webgl - buffergeometry - indexed</title>
@@ -9,8 +9,6 @@
 				color: #08f;
 			}
 		</style>
-		<script src="js/three.js"></script>
-		<script src="js/controls/TrackballControls.js"></script>
 	</head>
 	<body>
 
@@ -77,18 +75,80 @@
 
  </script>
 
- <script>
+ <script type="module">
+
+
+ class blob
+ {
+ 	mesh;
+ 	mesh2;
+ 	geometry;
+ 	material;
+ 	rude;
+ 	scaleX;
+ 	scaleY;
+ 	scaleZ;
+ 	segments;
+
+ 	constructor(mat)
+ 	{
+ 		this.material=mat;
+ 		this.rude=2.5;
+ 		this.subrocks=0;
+ 		this.scaleX=1.0;
+ 		this.scaleY=1.0;
+ 		this.scaleZ=1.0;
+ 		this.segments=4;
+ 	}
+
+ 	make()
+ 	{
+ 		this.geometry= new THREE.SphereGeometry(1, this.segments, this.segments);
+ 		for (var i = 0; i < this.geometry.vertices.length; i++)
+ 		{
+ 			var p = this.geometry.vertices[i];
+ 			p.x=(p.x+(Math.random()/this.rude))*this.scaleX;
+ 			p.y=(p.y+(Math.random()/this.rude))*this.scaleY;
+ 			p.z=p.z*this.scaleZ;
+ 			//p.normalize().multiplyScalar(Math.random()/4.0);
+ 		}
+ 		this.geometry.computeVertexNormals();
+ 		this.geometry.normalsNeedUpdate = true;
+ 		this.geometry.verticesNeedUpdate = true;
+ 		this.mesh = new THREE.Mesh(this.geometry, this.material);
+ 	}
+
+ 	getMesh()
+ 	{
+ 		return(this.mesh);
+ 	}
+
+ 	moveMesh(x,y,z)
+ 	{
+ 		var position = new THREE.Vector3();
+ 		this.mesh.position.x = x;
+ 		this.mesh.position.y = y;
+ 		this.mesh.position.z = z;
+ 	}
+
+ 	rotate(x,y,z)
+ 	{
+ 		this.mesh.rotateX(x);
+ 		this.mesh.rotateY(y);
+ 		this.mesh.rotateZ(z);
+ 	}
+ }
+
 class bsBuilding
 {
 	mesh;
 	geometry;
 	material;
 
-
 	constructor(x,y,z)
 	{
      this.geometry = new THREE.BoxBufferGeometry( x, y, z );
-		 this.material = new THREE.MeshBasicMaterial( { color: 0x00ccff, wireframe: true } );
+		 this.material = new THREE.MeshPhongMaterial( { color: 0x00ccff, wireframe: false } );
 		 this.mesh = new THREE.Mesh( this.geometry, this.material );
 	}
 
@@ -109,19 +169,42 @@ class bsBuilding
 }
 
 
-</script>
-		<script>
 
-			var camera, scene, renderer, controls;
+		import * as THREE from '../build/three.module.js';
+		import { TrackballControls } from './jsm/controls/TrackballControls.js';
+
+		import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
+					import { RenderPass } from './jsm/postprocessing/RenderPass.js';
+					import { SAOPass } from './jsm/postprocessing/SAOPass.js';
+
+
+			var camera, scene, renderer, controls, light;
 			var mesh;
+      var composer, renderPass, saoPass;
+
 				var geometry = new THREE.BufferGeometry();
 				var vertices = [];
-				var segments = 100;
+				var segments = 70;
 				var bld = [];
 
-        for(var i=0; i<30; i++)
+
+        for(var i=0; i<1000; i++)
 				{
-				  bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
+				  //bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
+					bld[i] = new blob(new THREE.MeshStandardMaterial( { color: new THREE.Color("hsl("+(Math.floor(Math.random()*30)+20)+","
+						+(Math.floor(Math.random()*100)+50)+"%,50%)"), roughness:1.0, flatShading:true, wireframe:false }));
+				}
+
+				for(var i=0; i<1000; i++)
+				{
+					bld[i].segments=Math.floor(Math.random()*7)+4;
+          var sc = (Math.random()/4.0)*(Math.random()*5.0);
+
+					bld[i].scaleY = sc;
+          bld[i].scaleZ = sc;
+          bld[i].scaleX = sc;
+
+					bld[i].make();
 				}
 
 
@@ -137,8 +220,14 @@ class bsBuilding
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x050505 );
 				//
-				var light = new THREE.HemisphereLight();
+				var light1 = new THREE.HemisphereLight();
+				//scene.add( light1 );
+
+				scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+				light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
+				light.position.copy( camera.position );
 				scene.add( light );
+
 				//
 
 				var indices = [];
@@ -178,16 +267,56 @@ class bsBuilding
 				//
 				geometry.setIndex( indices );
 				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-				geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-				geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-				var material = new THREE.MeshPhongMaterial( {
+				geometry.setAttribute( 'normal',   new THREE.Float32BufferAttribute( normals, 3 ) );
+				geometry.setAttribute( 'color',    new THREE.Float32BufferAttribute( colors, 3 ) );
+				geometry.setAttribute( 'uv',       new THREE.Float32BufferAttribute( vertices, 2));
+
+
+
+
+
+				// load a texture, set wrap mode to repeat
+				var texture = new THREE.TextureLoader().load( "res/test.jpg");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( 4, 4);
+				console.log(texture);
+
+				var material = new THREE.MeshStandardMaterial( {
+						color: 0xffcc00,
+						//new THREE.Color("hsl("+(Math.floor(Math.random()*50)+20)+","
+						//+Math.floor(Math.random()*100)+"%,50%)"),
+						//roughness:0.96,
+						//flatShading:true,
+						wireframe:false,
+						map:texture,
+						side: THREE.DoubleSide
+					});
+					material.map=texture;
+					//console.log(material);
+					mesh = new THREE.Mesh( geometry, material );
+	 				scene.add( mesh );
+
+
+
+
+
+
+
+
+				/*var material = new THREE.MeshStandardMaterial( {
 					side: THREE.DoubleSide,
 					vertexColors: THREE.VertexColors,
-					wireframe : true
+					flatShading:false,
+					color: 0xcfe8666,
+					wireframe : false,
+					/metalness : 0,
+					roughness: 1.0,
+					map:texture
 
-				} );
-				mesh = new THREE.Mesh( geometry, material );
-				scene.add( mesh );
+				} );*/
+
+
 				//
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -195,18 +324,27 @@ class bsBuilding
 				document.body.appendChild( renderer.domElement );
 
 				// controls
-controls = new THREE.TrackballControls( camera, renderer.domElement );
-controls.zoom=0.05;
-controls.rotateSpeed = 2.0;
-controls.zoomSpeed = 0.2;
-controls.panSpeed = 0.8;
-controls.staticMoving = false;
-controls.dynamicDampingFactor = 0.1;
-controls.keys = [ 65, 83, 68 ];
+        controls = new TrackballControls( camera, renderer.domElement );
+        controls.zoom=0.05;
+        controls.rotateSpeed = 2.0;
+        controls.zoomSpeed = 0.2;
+        controls.panSpeed = 0.8;
+        controls.staticMoving = false;
+        controls.dynamicDampingFactor = 0.1;
+        controls.keys = [ 65, 83, 68 ];
+
+				//postprocessing
+				composer = new EffectComposer( renderer );
+				renderPass = new RenderPass( scene, camera );
+				composer.addPass( renderPass );
+				saoPass = new SAOPass( scene, camera, false, true );
+				composer.addPass( saoPass );
+				saoPass.params.saoIntensity=0.00035;
+        saoPass.params.saoBlurRadius=5;
 
 //add object
 
-for(var i=0; i<30; i++)
+for(var i=0; i<bld.length; i++)
 {
 	scene.add(bld[i].getMesh());
 }
@@ -228,6 +366,8 @@ for(var i=0; i<30; i++)
 				requestAnimationFrame( animate );
 				render();
         controls.update();
+				light.position.copy(camera.position);
+				composer.render();
 
 			}
 			function render() {
@@ -251,6 +391,12 @@ for(var i=0; i<30; i++)
 		 }
 		 return arr;
 	}
+
+function coords(x,y)
+{
+    var adress =((y*(segments+1))+x)*3;
+    return({x:vertices[adress],y:vertices[adress+1],z:vertices[adress+2]});
+}
 
 function realtime()
 {
@@ -280,7 +426,7 @@ function realtime()
   //scale and copy the noise data to mesh geometry
 	var noisescale = (Math.random()*2.0);
 	var noisescale1 = (Math.random()*20)-10;
-
+  //console.log(vertices);
 	for(var i = -1; i < vertices.length; i=i+3)
 	{
 		if(i>0)
@@ -289,15 +435,53 @@ function realtime()
 				((noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale)+
 				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale1)
 			);
+
 		}
-		console.log(i);
-		if(i==16157) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
-    if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
-    if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+
+		//if(i==1 ) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    //if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    //if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
 
 
-	}
+  }
 	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	mesh.geometry.computeFaceNormals();
+	mesh.geometry.computeVertexNormals();
+	mesh.geometry.normalsNeedUpdate = true;
+  mesh.geometry.verticesNeedUpdate = true;
+	var i = 0;
+  for(x=0; x<segments; x++)
+  {
+    for(y=0; y<segments; y++)
+    {
+      if(noise[x][y]<0.4 && i<bld.length)
+      {
+        var pos = coords(x,y);
+        bld[i].moveMesh(pos.x,pos.y,pos.z);
+        i++;
+      }
+    }
+
+  }
+
+	// load a texture, set wrap mode to repeat
+	var texture = new THREE.TextureLoader().load( "res/test.jpg");
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 4, 4);
+	console.log(texture);
+
+	mesh.material=new THREE.MeshPhongMaterial({color:new THREE.Color("rgba(130,80,10,5)"),roughness:1.0,metalness:0});
+	/*var pos = coords(0,0);
+	bld[0].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(segments,0);
+	bld[1].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(0,segments);
+	bld[2].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(segments,segments);
+	bld[3].moveMesh(pos.x,pos.y,pos.z);
+	console.log(pos);*/
+
 
 }
 
