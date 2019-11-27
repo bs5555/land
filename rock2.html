@@ -161,6 +161,13 @@
 				 this.mesh.position.y = y;
 				 this.mesh.position.z = z;
 			 }
+
+			 rotate(x,y,z)
+			 {
+				 this.mesh.rotateX(x);
+				 this.mesh.rotateY(y);
+				 this.mesh.rotateZ(z);
+			 }
 		 }
 
     class blobGroup
@@ -199,12 +206,13 @@
 				if(this.level>0)
 				{
 			    this.meshes[this.c]=new blob(this.material);
-					this.meshes[this.c].segments=this.segments-this.c;
-					//this.meshes[this.c].scaleX=this.scaleX/this.c;
-					//this.meshes[this.c].scaleY=this.scaleY/this.c;
-					//this.meshes[this.c].scaleZ=this.scaleZ/this.c;
+					this.meshes[this.c].segments=Math.ceil(this.segments-(this.c/10));
+					this.meshes[this.c].scaleX=this.scaleX/((this.c)/(this.c));
+					this.meshes[this.c].scaleY=this.scaleY/((this.c)/(this.c));
+					this.meshes[this.c].scaleZ=this.scaleZ/((this.c)/(this.c));
 					this.meshes[this.c].make();
 					this.meshes[this.c].move(this.c,0,0);
+					this.meshes[this.c].rotate(0,this.c,0);
 
 					console.log(this.meshes[this.c].get());
 
@@ -218,9 +226,17 @@
 			move(x,y,z)
 			{
 				var position = new THREE.Vector3();
+        this.mesh.rotateY(ay);
 				this.mesh.position.x = x;
 				this.mesh.position.y = y;
 				this.mesh.position.z = z;
+			}
+
+			rotate(x,y,z)
+			{
+				this.mesh.rotateX(x);
+				this.mesh.rotateY(y);
+				this.mesh.rotateZ(z);
 			}
 
 			get()
@@ -238,20 +254,20 @@
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set( 10, 10);
 
-  var material = new THREE.MeshStandardMaterial( { color: 0x00ccff, roughness:1.0, flatShading:true, wireframe:false } );
-		//material.map=texture;
+  var material = new THREE.MeshStandardMaterial( { /*color: 0x00ccff,*/ roughness:1.0, flatShading:true, wireframe:false } );
+		material.map=texture;
 
 		//var material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
 
-    var g=new blobGroup(material,10);
+    var g=new blobGroup(material,40);
 		g.rude=2.5;
 		g.scaleX=1.0;
-		g.scaleY=1.0;
+		g.scaleY=2.0;
 		g.scaleZ=1.0;
 		g.segments=6;
-		//scene.add(g.get());
+		scene.add(g.get());
 
-    for(var x = -5; x<5; x++)
+    /*for(var x = -5; x<5; x++)
 		{
 			for(var y = -5; y<5; y++)
 			{
@@ -269,7 +285,7 @@
 			  scene.add(r.get());
 				r.move(x*3,0,y*3);
 			}
-		}
+		}*/
 
 
 

@@ -1,0 +1,264 @@
+<html>
+	<head>
+		<title>Word generator</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script type="module">
+		//import modules
+	  import * as THREE from '../build/three.module.js';
+	  import { TrackballControls } from './jsm/controls/TrackballControls.js';
+    import icomesh from './bsjs/icomesh.js';
+
+
+
+/*
+		 function Rock(size)
+		 {
+
+			 function randomFloat(min = 0, max = 1) {
+			         if (!max) {
+			             return Math.random() * min;
+			         } else {
+			             return Math.random() * (max - min) + min;
+			         }
+			     }
+
+    size = size || 2;
+    let pointCount = 40; //Util.randomInt(10, 10);
+
+    let points = [];
+    let min = -size,
+        max = size;
+    for (var i = 0; i <= pointCount; i++) {
+        points.push([
+            randomFloat(min, max),
+            randomFloat(min, max),
+            randomFloat(min, max),
+        ]);
+    }
+
+    // console.log(points);
+
+    // let outline = qh(points, {skipTriangulation: true });
+    //let outline = qh(points); //.reduce((a, b) => a.concat(b)).map(i => points[i]).reduce((a, b) => a.concat(b));
+    let outline = new ConvexHull(points);
+
+    let geometry = new THREE.BufferGeometry();
+
+    // let geometry = new THREE.Geometry();
+
+    // let vertices = new Float32Array(outline);
+
+    // geometry.addAttribute( 'uniforms', {
+    //         time: { value: 1.0 },
+    //         resolution: { value: new THREE.Vector2() }
+    //     });
+
+    // uniforms: {
+    //     time: { value: 1.0 },
+    //     resolution: { value: new THREE.Vector2() }
+    // },
+    // attributes: {
+    //     vertexOpacity: { value: [] }
+    // },
+    geometry.vertices = points.map(p => {
+        return new THREE.Vector3(p[0], p[1], p[2]);
+    });
+
+    let vertices = new Float32Array(points.reduce((a, b) => a.concat(b)));
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+    let indices = new Uint16Array(outline.reduce((a, b) => a.concat(b)));
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+
+
+    let markers = new THREE.Object3D();
+
+    points.forEach(f => {
+        let cross = Cross(0.5);
+
+        cross.position.x = f[0];
+        cross.position.y = f[1];
+        cross.position.z = f[2];
+
+        markers.add(cross);
+    });
+
+    let material = new THREE.MeshLambertMaterial({
+        color: 0xf4e0c5,
+        shading: THREE.SmoothShading,
+    });
+
+    let mesh = new THREE.Mesh(geometry, Materials.EARTH);
+;
+
+    return mesh;
+}
+*/
+
+
+		 //superglobals
+		 var scene;    //scene
+		 var camera;   //camera
+		 var renderer; //renderer
+		 var controls; //renderer
+		 var light;    //lights
+
+    //init function
+     var init = function()
+		 {
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
+      camera.position.z = 15;
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			controls = new TrackballControls( camera, renderer.domElement );
+			controls.zoom=0.05;
+			controls.rotateSpeed = 2.0;
+			controls.zoomSpeed = 0.2;
+			controls.panSpeed = 0.8;
+			controls.staticMoving = false;
+			controls.dynamicDampingFactor = 0.1;
+			controls.keys = [ 65, 83, 68 ];
+
+      //lights
+			scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+			light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
+			light.position.copy( camera.position );
+			scene.add( light );
+
+			createHeightmap()
+
+			function createHeightmap()
+			{
+     // extract the data from the image by drawing it to a canvas
+     // and calling getImageData
+
+     const geometry = new THREE.Geometry();
+     const width = 140;
+		 const height = 140;
+
+     const cellsAcross = width - 1;
+     const cellsDeep = height - 1;
+     for (let z = 0; z < cellsDeep; ++z) {
+       for (let x = 0; x < cellsAcross; ++x) {
+         // compute row offsets into the height data
+         // we multiply by 4 because the data is R,G,B,A but we
+         // only care about R
+         const base0 = (z * width + x) * 4;
+         const base1 = base0 + (width * 4);
+
+         // look up the height for the for points
+         // around this cell
+         var h1 = Math.random();
+				 var h2 = Math.random();
+
+         const h00 = h1 / 32;
+         const h01 = h1  / 32;
+         const h10 = h2 / 32;
+         const h11 = h2 / 32;
+         // compute the average height
+         const hm = (h00 + h01 + h10 + h11) / 4;
+
+         // the corner positions
+         const x0 = x;
+         const x1 = x + 1;
+         const z0 = z;
+         const z1 = z + 1;
+
+         // remember the first index of these 5 vertices
+         const ndx = geometry.vertices.length;
+
+         // add the 4 corners for this cell and the midpoint
+         geometry.vertices.push(
+           new THREE.Vector3(x0, h00, z0),
+           new THREE.Vector3(x1, h01, z0),
+           new THREE.Vector3(x0, h10, z1),
+           new THREE.Vector3(x1, h11, z1),
+           new THREE.Vector3((x0 + x1) / 2, hm, (z0 + z1) / 2),
+         );
+
+         //      2----3
+         //      |\  /|
+         //      | \/4|
+         //      | /\ |
+         //      |/  \|
+         //      0----1
+
+         // create 4 triangles
+         geometry.faces.push(
+           new THREE.Face3(ndx    , ndx + 4, ndx + 1),
+           new THREE.Face3(ndx + 1, ndx + 4, ndx + 3),
+           new THREE.Face3(ndx + 3, ndx + 4, ndx + 2),
+           new THREE.Face3(ndx + 2, ndx + 4, ndx + 0),
+         );
+
+         // add the texture coordinates for each vertex of each face.
+         const u0 = x / cellsAcross;
+         const v0 = z / cellsDeep;
+         const u1 = (x + 1) / cellsAcross;
+         const v1 = (z + 1) / cellsDeep;
+         const um = (u0 + u1) / 2;
+         const vm = (v0 + v1) / 2;
+         geometry.faceVertexUvs[0].push(
+           [ new THREE.Vector2(u0, v0), new THREE.Vector2(um, vm), new THREE.Vector2(u1, v0) ],
+           [ new THREE.Vector2(u1, v0), new THREE.Vector2(um, vm), new THREE.Vector2(u1, v1) ],
+           [ new THREE.Vector2(u1, v1), new THREE.Vector2(um, vm), new THREE.Vector2(u0, v1) ],
+           [ new THREE.Vector2(u0, v1), new THREE.Vector2(um, vm), new THREE.Vector2(u0, v0) ],
+         );
+       }
+     }
+
+     geometry.computeFaceNormals();
+
+     // center the geometry
+     geometry.translate(width / -2, 0, height / -2);
+
+     const loader = new THREE.TextureLoader();
+     const texture = loader.load('https://threejsfundamentals.org/threejs/resources/images/star.png');
+     texture.wrapS = THREE.RepeatWrapping;
+ 	  texture.wrapT = THREE.RepeatWrapping;
+ 	  texture.repeat.set(0.5,0.5);
+
+     const material = new THREE.MeshPhongMaterial({color: 'green', map: texture});
+
+     const cube = new THREE.Mesh(geometry, material);
+     scene.add(cube);
+   }
+
+
+
+
+		}
+		init();
+
+
+
+
+		//var helper1 = new THREE.FaceNormalsHelper( cube, 2, 0x0000ff, 1 );
+		//scene.add( helper1 );
+
+
+
+			var animate = function () {
+				requestAnimationFrame(animate);
+				controls.update();
+				light.position.copy(camera.position);
+				renderer.render( scene, camera );
+			};
+
+			animate();
+		</script>
+	</body>
+</html>
