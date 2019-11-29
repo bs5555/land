@@ -78,15 +78,72 @@
  <script type="module">
 
 
+ class blob
+ {
+ 	mesh;
+ 	mesh2;
+ 	geometry;
+ 	material;
+ 	rude;
+ 	scaleX;
+ 	scaleY;
+ 	scaleZ;
+ 	segments;
+
+ 	constructor(mat)
+ 	{
+ 		this.material=mat;
+ 		this.rude=2.5;
+ 		this.subrocks=0;
+ 		this.scaleX=1.0;
+ 		this.scaleY=1.0;
+ 		this.scaleZ=1.0;
+ 		this.segments=4;
+ 	}
+
+ 	make()
+ 	{
+ 		this.geometry= new THREE.SphereGeometry(1, this.segments, this.segments);
+ 		for (var i = 0; i < this.geometry.vertices.length; i++)
+ 		{
+ 			var p = this.geometry.vertices[i];
+ 			p.x=(p.x+(Math.random()/this.rude))*this.scaleX;
+ 			p.y=(p.y+(Math.random()/this.rude))*this.scaleY;
+ 			p.z=p.z*this.scaleZ;
+ 			//p.normalize().multiplyScalar(Math.random()/4.0);
+ 		}
+ 		this.geometry.computeVertexNormals();
+ 		this.geometry.normalsNeedUpdate = true;
+ 		this.geometry.verticesNeedUpdate = true;
+ 		this.mesh = new THREE.Mesh(this.geometry, this.material);
+ 	}
+
+ 	getMesh()
+ 	{
+ 		return(this.mesh);
+ 	}
+
+ 	moveMesh(x,y,z)
+ 	{
+ 		var position = new THREE.Vector3();
+ 		this.mesh.position.x = x;
+ 		this.mesh.position.y = y;
+ 		this.mesh.position.z = z;
+ 	}
+
+ 	rotate(x,y,z)
+ 	{
+ 		this.mesh.rotateX(x);
+ 		this.mesh.rotateY(y);
+ 		this.mesh.rotateZ(z);
+ 	}
+ }
 
 class bsBuilding
 {
 	mesh;
 	geometry;
 	material;
-
-
-
 
 	constructor(x,y,z)
 	{
@@ -127,12 +184,27 @@ class bsBuilding
 
 				var geometry = new THREE.BufferGeometry();
 				var vertices = [];
-				var segments = 100;
+				var segments = 70;
 				var bld = [];
+
 
         for(var i=0; i<1000; i++)
 				{
-				  bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
+				  //bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
+					bld[i] = new blob(new THREE.MeshStandardMaterial( { color: new THREE.Color("hsl("+(Math.floor(Math.random()*30)+20)+","
+						+(Math.floor(Math.random()*100)+50)+"%,50%)"), roughness:1.0, flatShading:true, wireframe:false }));
+				}
+
+				for(var i=0; i<1000; i++)
+				{
+					bld[i].segments=Math.floor(Math.random()*7)+4;
+          var sc = (Math.random()/4.0)*(Math.random()*5.0);
+
+					bld[i].scaleY = sc;
+          bld[i].scaleZ = sc;
+          bld[i].scaleX = sc;
+
+					bld[i].make();
 				}
 
 
@@ -195,16 +267,56 @@ class bsBuilding
 				//
 				geometry.setIndex( indices );
 				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-				geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-				geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-				var material = new THREE.MeshPhongMaterial( {
+				geometry.setAttribute( 'normal',   new THREE.Float32BufferAttribute( normals, 3 ) );
+				geometry.setAttribute( 'color',    new THREE.Float32BufferAttribute( colors, 3 ) );
+				geometry.setAttribute( 'uv',       new THREE.Float32BufferAttribute( vertices, 2));
+
+
+
+
+
+				// load a texture, set wrap mode to repeat
+				var texture = new THREE.TextureLoader().load( "res/test.jpg");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( 4, 4);
+				console.log(texture);
+
+				var material = new THREE.MeshStandardMaterial( {
+						color: 0xffcc00,
+						//new THREE.Color("hsl("+(Math.floor(Math.random()*50)+20)+","
+						//+Math.floor(Math.random()*100)+"%,50%)"),
+						//roughness:0.96,
+						//flatShading:true,
+						wireframe:false,
+						map:texture,
+						side: THREE.DoubleSide
+					});
+					material.map=texture;
+					//console.log(material);
+					mesh = new THREE.Mesh( geometry, material );
+	 				scene.add( mesh );
+
+
+
+
+
+
+
+
+				/*var material = new THREE.MeshStandardMaterial( {
 					side: THREE.DoubleSide,
 					vertexColors: THREE.VertexColors,
-					wireframe : false
+					flatShading:false,
+					color: 0xcfe8666,
+					wireframe : false,
+					/metalness : 0,
+					roughness: 1.0,
+					map:texture
 
-				} );
-				mesh = new THREE.Mesh( geometry, material );
-				scene.add( mesh );
+				} );*/
+
+
 				//
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -227,8 +339,8 @@ class bsBuilding
 				composer.addPass( renderPass );
 				saoPass = new SAOPass( scene, camera, false, true );
 				composer.addPass( saoPass );
-				saoPass.params.saoIntensity=0.0005;
-        saoPass.params.saoBlurRadius=10;
+				saoPass.params.saoIntensity=0.00035;
+        saoPass.params.saoBlurRadius=5;
 
 //add object
 
@@ -301,7 +413,7 @@ function realtime()
 	}
 
 	var noise1 = array2D(segments+1,segments+1,0);
-	var noisesize = (Math.random()*4);
+	var noisesize = (Math.random()*8);
 	for(var x = 0; x<segments+1; x++)
 	{
 		for(var y = 0; y<segments+1; y++)
@@ -333,7 +445,11 @@ function realtime()
 
   }
 	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  var i = 0;
+	mesh.geometry.computeFaceNormals();
+	mesh.geometry.computeVertexNormals();
+	mesh.geometry.normalsNeedUpdate = true;
+  mesh.geometry.verticesNeedUpdate = true;
+	var i = 0;
   for(x=0; x<segments; x++)
   {
     for(y=0; y<segments; y++)
@@ -348,6 +464,14 @@ function realtime()
 
   }
 
+	// load a texture, set wrap mode to repeat
+	var texture = new THREE.TextureLoader().load( "res/test.jpg");
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 4, 4);
+	console.log(texture);
+
+	mesh.material=new THREE.MeshPhongMaterial({color:new THREE.Color("rgba(130,80,10,5)"),roughness:1.0,metalness:0});
 	/*var pos = coords(0,0);
 	bld[0].moveMesh(pos.x,pos.y,pos.z);
 	pos = coords(segments,0);

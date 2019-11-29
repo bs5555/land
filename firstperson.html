@@ -5,7 +5,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<script src="js/three.js"></script>
-			<script src="js/controls/PointerLockControls.js"></script>
+		<script src="js/controls/PointerLockControls.js"></script>
 		<style>
 			#blocker {
 				position: absolute;
@@ -68,7 +68,7 @@
 			init();
 			animate();
 			function init() {
-				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 1000 );
 				camera.position.y = 10;
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0xffffff );
@@ -110,7 +110,7 @@
 							moveRight = true;
 							break;
 						case 32: // space
-							if ( canJump === true ) velocity.y += 350;
+							if ( canJump === true ) velocity.y += 200;
 							canJump = false;
 							break;
 					}
@@ -154,7 +154,7 @@
 				position = floorGeometry.attributes.position;
 				var colors = [];
 				for ( var i = 0, l = position.count; i < l; i ++ ) {
-					color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+					color.setHSL( Math.random() * 0.93 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
 					colors.push( color.r, color.g, color.b );
 				}
 				floorGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
@@ -162,7 +162,7 @@
 				var floor = new THREE.Mesh( floorGeometry, floorMaterial );
 				scene.add( floor );
 				// objects
-				var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
+				var boxGeometry = new THREE.BoxBufferGeometry( 80, Math.random()*1000, 80 );
 				boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
 				position = boxGeometry.attributes.position;
 				colors = [];
@@ -172,12 +172,13 @@
 				}
 				boxGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
 				for ( var i = 0; i < 500; i ++ ) {
+				var boxGeometry = new THREE.BoxBufferGeometry( 80, Math.random()*1000, 80 );
 					var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: THREE.VertexColors } );
 					boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
 					var box = new THREE.Mesh( boxGeometry, boxMaterial );
-					box.position.x = Math.floor( Math.random() * 40 - 10 ) * 20;
+					box.position.x = Math.floor( Math.random() * 100 - 10 ) * 100;
 					box.position.y = Math.floor( Math.random() * 0 ) * 20 + 10;
-					box.position.z = Math.floor( Math.random() * 40 - 10 ) * 20;
+					box.position.z = Math.floor( Math.random() * 70 - 10 ) * 20;
 					scene.add( box );
 					objects.push( box );
 				}
