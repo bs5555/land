@@ -1,0 +1,163 @@
+<html>
+	<head>
+		<title>Sky study</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/controls/TrackballControls.js"></script>
+		<script src="js/utils/SceneUtils.js"></script>
+
+		<div id="container" style="width:100%; height=:100vh"></div>
+
+		<script type="application/x-glsl" id="sky-vertex">
+varying vec2 vUV;
+
+void main() {
+  vUV = uv;
+  vec4 pos = vec4(position, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * pos;
+}
+</script>
+
+<script type="application/x-glsl" id="sky-fragment">
+uniform sampler2D texture;
+varying vec2 vUV;
+
+void main() {
+  vec4 sample = texture2D(texture, vUV);
+  gl_FragColor = vec4(sample.xyz, sample.w);
+}
+</script>
+
+
+
+<script>
+
+class bsSkySphere
+{
+	mesh;
+	geo;
+	radius;
+	material;
+
+	constructor(radius,detail,material)
+	{
+		this.radius = radius;
+		this.geo = new THREE.SphereGeometry(this.radius, detail, detail);
+		this.material = material;
+		this.material.side = THREE.BackSide;
+		this.material.blending=THREE.NormalBlending;
+		this.material.transparent = true;
+		this.mesh = new THREE.Mesh(this.geo, this.material);
+		return(this.mesh);
+	}
+}
+
+</script>
+
+		<script>
+		var camera, scene, renderer;
+var geometry, material1, material2;
+var parentCube;
+var cubeMesh = [];
+var cameraControls;
+var attached = true;
+
+window.onload = function() {
+    init();
+    animate();
+}
+
+function init() {
+
+    camera = new THREE.PerspectiveCamera(75, 2, 1, 10000);
+    camera.position.z = 400;
+    camera.position.y = 100;
+
+    scene = new THREE.Scene();
+
+    geometry = new THREE.BoxGeometry(200, 200, 200);
+    material1 = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true  });
+
+    //Create parentCube mesh
+    parentCube = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100, 1, 1, 1), material1);
+    scene.add(parentCube);
+
+    //...create materials for the child cubes....
+    material2 = new THREE.MeshBasicMaterial({        color: 0x00ff00   });
+    //create child cube mesh
+    cubeMesh[0] = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100, 1, 1, 1), material2);
+    cubeMesh[1] = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100, 1, 1, 1), material2);
+    cubeMesh[2] = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100, 1, 1, 1), material2);
+    cubeMesh[3] = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100, 1, 1, 1), material2);
+
+        //--> Set child cube world positions before the attachment to parentCube mesh
+    //cubeMesh[0].position.set(100,100,0);
+    //cubeMesh[1].position.set(-100,100,0);
+    //cubeMesh[2].position.set(-100,-100,0);
+    //cubeMesh[3].position.set(100,-100,0);
+
+        //Add child cubes to the scene
+    for (var i = 0; i < 4; i++)
+        parentCube.add(cubeMesh[i]);
+
+
+   //translate parentCube
+   parentCube.position.set(0,50,0);
+
+
+  renderer = new THREE.WebGLRenderer();
+    renderer.setSize(600, 300);
+
+    document.body.appendChild(renderer.domElement);
+
+        // CONTROLS
+    cameraControls = new THREE.TrackballControls(camera);
+    cameraControls.addEventListener( 'change', render );
+
+
+}
+
+function animate() {
+    cameraControls.update();
+    requestAnimationFrame(animate);
+    parentCube.rotation.z += 0.01;
+    render ();
+}
+
+function render () {
+    renderer.render(scene, camera);
+
+}
+
+function attachChild () {
+    if (attached) {
+        alert ("already attached");
+    } else {
+        for (var i = 0; i < 4; i++)
+            THREE.SceneUtils.attach(cubeMesh[i], scene, parentCube);
+        attached = true;
+    }
+}
+
+function detachChild () {
+    if ( ! attached) {
+        alert ("not attached");
+    } else {
+        for (var i = 0; i < 4; i++)
+            THREE.SceneUtils.detach(cubeMesh[i], parentCube, scene);
+        attached = false;
+    }
+}
+		</script>
+
+
+<a href="javascript:attachChild()">Attach</a><br>
+<a href="javascript:detachChild()">Detach</a><br>
+
+	</body>
+</html>

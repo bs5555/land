@@ -1,0 +1,609 @@
+<DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - buffergeometry - indexed</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			a {
+				color: #08f;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+
+ <script>
+
+ // This is a port of Ken Perlin's Java code. The
+ // original Java code is at http://cs.nyu.edu/%7Eperlin/noise/.
+ // Note that in this version, a number from 0 to 1 is returned.
+ var PerlinNoise = new function()
+ {
+   this.noise = function(x, y, z) {
+
+    var p = new Array(512)
+    var permutation = [ 151,160,137,91,90,15,
+    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+    190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+    88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+    77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+    102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+    135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+    5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+    223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+    129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+    251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+    49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+    138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
+    ];
+    for (var i=0; i < 256 ; i++)
+  p[256+i] = p[i] = permutation[i];
+
+       var X = Math.floor(x) & 255,                  // FIND UNIT CUBE THAT
+           Y = Math.floor(y) & 255,                  // CONTAINS POINT.
+           Z = Math.floor(z) & 255;
+       x -= Math.floor(x);                                // FIND RELATIVE X,Y,Z
+       y -= Math.floor(y);                                // OF POINT IN CUBE.
+       z -= Math.floor(z);
+       var    u = fade(x),                                // COMPUTE FADE CURVES
+              v = fade(y),                                // FOR EACH OF X,Y,Z.
+              w = fade(z);
+       var A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,      // HASH COORDINATES OF
+           B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;      // THE 8 CUBE CORNERS,
+
+       return scale(lerp(w, lerp(v, lerp(u, grad(p[AA  ], x  , y  , z   ),  // AND ADD
+                                      grad(p[BA  ], x-1, y  , z   )), // BLENDED
+                              lerp(u, grad(p[AB  ], x  , y-1, z   ),  // RESULTS
+                                      grad(p[BB  ], x-1, y-1, z   ))),// FROM  8
+                      lerp(v, lerp(u, grad(p[AA+1], x  , y  , z-1 ),  // CORNERS
+                                      grad(p[BA+1], x-1, y  , z-1 )), // OF CUBE
+                              lerp(u, grad(p[AB+1], x  , y-1, z-1 ),
+                                      grad(p[BB+1], x-1, y-1, z-1 )))));
+    }
+    function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    function lerp( t, a, b) { return a + t * (b - a); }
+    function grad(hash, x, y, z) {
+       var h = hash & 15;                      // CONVERT LO 4 BITS OF HASH CODE
+       var u = h<8 ? x : y,                 // INTO 12 GRADIENT DIRECTIONS.
+              v = h<4 ? y : h==12||h==14 ? x : z;
+       return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
+    }
+    function scale(n) { return (1 + n)/2; }
+ }
+
+ </script>
+
+ <script type="module">
+
+
+ class blob
+ {
+ 	mesh;
+ 	mesh2;
+ 	geometry;
+ 	material;
+ 	rude;
+ 	scaleX;
+ 	scaleY;
+ 	scaleZ;
+ 	segments;
+
+ 	constructor(mat)
+ 	{
+ 		this.material=mat;
+ 		this.rude=2.5;
+ 		this.subrocks=0;
+ 		this.scaleX=1.0;
+ 		this.scaleY=1.0;
+ 		this.scaleZ=1.0;
+ 		this.segments=4;
+ 	}
+
+ 	make()
+ 	{
+ 		this.geometry= new THREE.SphereGeometry(1, this.segments, this.segments);
+ 		for (var i = 0; i < this.geometry.vertices.length; i++)
+ 		{
+ 			var p = this.geometry.vertices[i];
+ 			p.x=(p.x+(Math.random()/this.rude))*this.scaleX;
+ 			p.y=(p.y+(Math.random()/this.rude))*this.scaleY;
+ 			p.z=p.z*this.scaleZ;
+ 			//p.normalize().multiplyScalar(Math.random()/4.0);
+ 		}
+ 		this.geometry.computeVertexNormals();
+ 		this.geometry.normalsNeedUpdate = true;
+ 		this.geometry.verticesNeedUpdate = true;
+ 		this.mesh = new THREE.Mesh(this.geometry, this.material);
+ 	}
+
+ 	getMesh()
+ 	{
+ 		return(this.mesh);
+ 	}
+
+ 	moveMesh(x,y,z)
+ 	{
+ 		var position = new THREE.Vector3();
+ 		this.mesh.position.x = x;
+ 		this.mesh.position.y = y;
+ 		this.mesh.position.z = z;
+ 	}
+
+ 	rotate(x,y,z)
+ 	{
+ 		this.mesh.rotateX(x);
+ 		this.mesh.rotateY(y);
+ 		this.mesh.rotateZ(z);
+ 	}
+ }
+
+class bsBuilding
+{
+	mesh;
+	geometry;
+	material;
+
+	constructor(x,y,z)
+	{
+     this.geometry = new THREE.BoxBufferGeometry( x, y, z );
+		 this.material = new THREE.MeshPhongMaterial( { color: 0x00ccff, wireframe: false } );
+		 this.mesh = new THREE.Mesh( this.geometry, this.material );
+	}
+
+	getMesh()
+	{
+		return(this.mesh);
+	}
+
+	moveMesh(x,y,z)
+	{
+		var position = new THREE.Vector3();
+	  this.mesh.position.x = x;
+		this.mesh.position.y = y;
+		this.mesh.position.z = z;
+	}
+
+
+}
+
+
+
+		import * as THREE from '../build/three.module.js';
+		import { TrackballControls } from './jsm/controls/TrackballControls.js';
+
+		import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
+					import { RenderPass } from './jsm/postprocessing/RenderPass.js';
+					import { SAOPass } from './jsm/postprocessing/SAOPass.js';
+
+
+			var camera, scene, renderer, controls, light;
+			var mesh;
+      var composer, renderPass, saoPass;
+
+				var geometry = new THREE.BufferGeometry();
+				var vertices = [];
+				var segments = 70;
+				var bld = [];
+
+
+        for(var i=0; i<1000; i++)
+				{
+				  //bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
+					bld[i] = new blob(new THREE.MeshStandardMaterial( { color: new THREE.Color("hsl("+(Math.floor(Math.random()*30)+20)+","
+						+(Math.floor(Math.random()*100)+50)+"%,50%)"), roughness:1.0, flatShading:true, wireframe:false }));
+				}
+
+				for(var i=0; i<1000; i++)
+				{
+					bld[i].segments=Math.floor(Math.random()*7)+4;
+          var sc = (Math.random()/4.0)*(Math.random()*5.0);
+
+					bld[i].scaleY = sc;
+          bld[i].scaleZ = sc;
+          bld[i].scaleX = sc;
+
+					bld[i].make();
+				}
+
+
+
+
+
+			init();
+			animate();
+			function init() {
+			
+			var camera, scene, renderer, controls;
+			var objects = [];
+			var raycaster;
+			var moveForward = false;
+			var moveBackward = false;
+			var moveLeft = false;
+			var moveRight = false;
+			var canJump = false;
+			var prevTime = performance.now();
+			var velocity = new THREE.Vector3();
+			var direction = new THREE.Vector3();
+			var vertex = new THREE.Vector3();
+			var colour = new THREE.Color();
+			init();
+			animate();
+			function init() {
+				camera = new THREE.PerspectiveCamera( 85, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.y = 10;
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xffffff );
+				scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
+				var light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
+				light.position.set( 0.5, 1, 0.75 );
+				scene.add( light );
+				controls = new THREE.PointerLockControls( camera, document.body );
+				var blocker = document.getElementById( 'blocker' );
+				var instructions = document.getElementById( 'instructions' );
+				instructions.addEventListener( 'click', function () {
+					controls.lock();
+				}, false );
+				controls.addEventListener( 'lock', function () {
+					instructions.style.display = 'none';
+					blocker.style.display = 'none';
+				} );
+				controls.addEventListener( 'unlock', function () {
+					blocker.style.display = 'block';
+					instructions.style.display = '';
+				} );
+				scene.add( controls.getObject() );
+				var onKeyDown = function ( event ) {
+					switch ( event.keyCode ) {
+						case 38: // up
+						case 87: // w
+							moveForward = true;
+							break;
+						case 37: // left
+						case 65: // a
+							moveLeft = true;
+							break;
+						case 40: // down
+						case 83: // s
+							moveBackward = true;
+							break;
+						case 39: // right
+						case 68: // d
+							moveRight = true;
+							break;
+						case 32: // space
+							if ( canJump === true ) velocity.y += 200;
+							canJump = false;
+							break;
+					}
+				};
+				var onKeyUp = function ( event ) {
+					switch ( event.keyCode ) {
+						case 38: // up
+						case 87: // w
+							moveForward = false;
+							break;
+						case 37: // left
+						case 65: // a
+							moveLeft = false;
+							break;
+						case 40: // down
+						case 83: // s
+							moveBackward = false;
+							break;
+						case 39: // right
+						case 68: // d
+							moveRight = false;
+							break;
+					}
+				};
+				document.addEventListener( 'keydown', onKeyDown, false );
+				document.addEventListener( 'keyup', onKeyUp, false );
+				raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+			
+				//
+				// camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
+				// camera.position.z = 64;
+				//scene = new THREE.Scene();
+				//scene.background = new THREE.Color( 0x050505 );
+				//
+				//var light1 = new THREE.HemisphereLight();
+				//scene.add( light1 );
+
+				//var camera, scene, renderer, controls;
+			
+
+				//
+
+				var indices = [];
+				var normals = [];
+				var colors = [];
+				var size = 40;
+
+				var halfSize = size / 2;
+				var segmentSize = size / segments;
+
+				// generate vertices, normals and color data for a simple grid geometry
+				for ( var i = 0; i <= segments; i ++ ) {
+					var y = ( i * segmentSize ) - halfSize;
+					for ( var j = 0; j <= segments; j ++ ) {
+						var x = ( j * segmentSize ) - halfSize;
+						vertices.push( x, - y , 1.0); //Math.random()*5.0
+						normals.push( 0, 0, 1 );
+						var r = ( x / size ) + 0.5;
+						var g = ( y / size ) + 0.5;
+						colors.push( r, g, 1 );
+					}
+				}
+
+
+				// generate indices (data for element array buffer)
+				for ( var i = 0; i < segments; i ++ ) {
+					for ( var j = 0; j < segments; j ++ ) {
+						var a = i * ( segments + 1 ) + ( j + 1 );
+						var b = i * ( segments + 1 ) + j;
+						var c = ( i + 1 ) * ( segments + 1 ) + j;
+						var d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
+						// generate two faces (triangles) per iteration
+						indices.push( a, b, d ); // face one
+						indices.push( b, c, d ); // face two
+					}
+				}
+				//
+				geometry.setIndex( indices );
+				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry.setAttribute( 'normal',   new THREE.Float32BufferAttribute( normals, 3 ) );
+				geometry.setAttribute( 'color',    new THREE.Float32BufferAttribute( colors, 3 ) );
+				geometry.setAttribute( 'uv',       new THREE.Float32BufferAttribute( vertices, 2));
+
+
+
+
+
+				// load a texture, set wrap mode to repeat
+				var texture = new THREE.TextureLoader().load( "res/test.jpg");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( 4, 4);
+				console.log(texture);
+
+				var material = new THREE.MeshStandardMaterial( {
+						color: 0xffcc00,
+						//new THREE.Color("hsl("+(Math.floor(Math.random()*50)+20)+","
+						//+Math.floor(Math.random()*100)+"%,50%)"),
+						//roughness:0.96,
+						//flatShading:true,
+						wireframe:false,
+						map:texture,
+						side: THREE.DoubleSide
+					});
+					material.map=texture;
+					//console.log(material);
+					mesh = new THREE.Mesh( geometry, material );
+	 				scene.add( mesh );
+
+
+
+
+
+
+
+
+				/*var material = new THREE.MeshStandardMaterial( {
+					side: THREE.DoubleSide,
+					vertexColors: THREE.VertexColors,
+					flatShading:false,
+					color: 0xcfe8666,
+					wireframe : false,
+					/metalness : 0,
+					roughness: 1.0,
+					map:texture
+
+				} );*/
+
+
+				//
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				// controls
+        controls = new TrackballControls( camera, renderer.domElement );
+        controls.zoom=0.05;
+        controls.rotateSpeed = 2.0;
+        controls.zoomSpeed = 0.2;
+        controls.panSpeed = 0.8;
+        controls.staticMoving = false;
+        controls.dynamicDampingFactor = 0.1;
+        controls.keys = [ 65, 83, 68 ];
+
+				//postprocessing
+				composer = new EffectComposer( renderer );
+				renderPass = new RenderPass( scene, camera );
+				composer.addPass( renderPass );
+				saoPass = new SAOPass( scene, camera, false, true );
+				composer.addPass( saoPass );
+				saoPass.params.saoIntensity=0.00035;
+        saoPass.params.saoBlurRadius=5;
+
+//add object
+
+for(var i=0; i<bld.length; i++)
+{
+	scene.add(bld[i].getMesh());
+}
+
+
+				//
+				window.addEventListener( 'resize', onWindowResize, false );
+
+       realtime();
+
+			}
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+			//
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+        controls.update();
+				light.position.copy(camera.position);
+				composer.render();
+
+			}
+			function render() {
+				var time = Date.now() * 0.001;
+				renderer.render( scene, camera );
+			}
+
+
+
+	function array2D(numrows, numcols, initial)
+	{
+	  var arr = [];
+		 for(var i = 0; i < numrows; ++i)
+		 {
+		   var columns = [];
+		   for (var j = 0; j < numcols; ++j)
+			 {
+		     columns[j] = initial;
+		   }
+		   arr[i] = columns;
+		 }
+		 return arr;
+	}
+
+function coords(x,y)
+{
+    var adress =((y*(segments+1))+x)*3;
+    return({x:vertices[adress],y:vertices[adress+1],z:vertices[adress+2]});
+}
+
+function realtime()
+{
+
+  //constructing an array of perl noise
+	var noise = array2D(segments+1,segments+1,0);
+	var noisesize = (Math.random()*10)+4 ;
+	for(var x = 0; x<segments+1; x++)
+	{
+		for(var y = 0; y<segments+1; y++)
+		{
+			noise[x][y]=PerlinNoise.noise(noisesize*(x/segments),noisesize*(y/segments),0.8);
+		}
+	}
+
+	var noise1 = array2D(segments+1,segments+1,0);
+	var noisesize = (Math.random()*8);
+	for(var x = 0; x<segments+1; x++)
+	{
+		for(var y = 0; y<segments+1; y++)
+		{
+			noise1[x][y]=PerlinNoise.noise(noisesize*(x/segments),noisesize*(y/segments),0.8);
+		}
+	}
+
+
+  //scale and copy the noise data to mesh geometry
+	var noisescale = (Math.random()*2.0);
+	var noisescale1 = (Math.random()*20)-10;
+  //console.log(vertices);
+	for(var i = -1; i < vertices.length; i=i+3)
+	{
+		if(i>0)
+		{
+			vertices[i]=(
+				((noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale)+
+				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*noisescale1)
+			);
+
+		}
+
+		//if(i==1 ) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    //if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+    //if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+
+
+  }
+	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	mesh.geometry.computeFaceNormals();
+	mesh.geometry.computeVertexNormals();
+	mesh.geometry.normalsNeedUpdate = true;
+  mesh.geometry.verticesNeedUpdate = true;
+	var i = 0;
+  for(x=0; x<segments; x++)
+  {
+    for(y=0; y<segments; y++)
+    {
+      if(noise[x][y]<0.4 && i<bld.length)
+      {
+        var pos = coords(x,y);
+        bld[i].moveMesh(pos.x,pos.y,pos.z);
+        i++;
+      }
+    }
+
+  }
+
+	// load a texture, set wrap mode to repeat
+	var texture = new THREE.TextureLoader().load( "res/test.jpg");
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 4, 4);
+	console.log(texture);
+
+	mesh.material=new THREE.MeshPhongMaterial({color:new THREE.Color("rgba(130,80,10,5)"),roughness:1.0,metalness:0});
+	/*var pos = coords(0,0);
+	bld[0].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(segments,0);
+	bld[1].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(0,segments);
+	bld[2].moveMesh(pos.x,pos.y,pos.z);
+	pos = coords(segments,segments);
+	bld[3].moveMesh(pos.x,pos.y,pos.z);
+	console.log(pos);*/
+
+
+}
+			function animate() {
+				requestAnimationFrame( animate );
+				if ( controls.isLocked === true ) {
+					raycaster.ray.origin.copy( controls.getObject().position );
+					raycaster.ray.origin.y -= 10;
+					var intersections = raycaster.intersectObjects( objects );
+					var onObject = intersections.length > 0;
+					var time = performance.now();
+					var delta = ( time - prevTime ) / 1000;
+					velocity.x -= velocity.x * 10.0 * delta;
+					velocity.z -= velocity.z * 10.0 * delta;
+					velocity.y -= 4 * 100.0 * delta; // 100.0 = mass
+					direction.z = Number( moveForward ) - Number( moveBackward );
+					direction.x = Number( moveRight ) - Number( moveLeft );
+					direction.normalize(); // this ensures consistent movements in all directions
+					if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+					if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+					if ( onObject === true ) {
+						velocity.y = Math.max( 0, velocity.y );
+						canJump = true;
+					}
+					controls.moveRight( - velocity.x * delta );
+					controls.moveForward( - velocity.z * delta );
+					controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+					if ( controls.getObject().position.y < 10 ) {
+						velocity.y = 0;
+						controls.getObject().position.y = 10;
+						canJump = true;
+					}
+					prevTime = time;
+				}
+				renderer.render( scene, camera );
+			}
+			
+		</script>
+<a href="javascript:realtime()" style="display:block; position:absolute; top:20px; right:20px; z-index:1000; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.8)"></a>
+	</body>
