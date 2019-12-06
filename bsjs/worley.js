@@ -1,5 +1,5 @@
 
-class WorleyNoise {
+export class WorleyNoise {
     constructor(config) {
         config = config || {};
         if (config.dim !== 2 && config.dim !== 3 && config.dim !== undefined)
@@ -14,7 +14,7 @@ class WorleyNoise {
                 y: Math.random(),
                 z: Math.random(),
             });
-        }        
+        }
     }
 
     addPoint(coord) {

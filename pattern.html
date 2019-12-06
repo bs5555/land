@@ -32,9 +32,6 @@ div.frame{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); 
  </style>
  <script src="res/jquery.js" ></script>
  <script src="res/global.js" ></script>
-<script src="bsjs/voronoi.js" ></script>
-<script src="bsjs/perlin.js" ></script>
-<script src="bsjs/worley.js" ></script>
  <script>
 
 
@@ -70,211 +67,6 @@ function draw(w,h,ctx,dat)
 }
 
 
-class bsPattern
-{
-  w = 10;
-  h = 10;
-  constructor(xw,xh)
-  {
-     this.w=xw;
-     this.h=xh;
-  }
-
-  array2D(numrows, numcols, initial)
-  {
-    var arr = [];
-  	for(var i = 0; i < numrows; ++i)
-  	 {
-  	   var columns = [];
-  	   for (var j = 0; j < numcols; ++j)
-  		 {
-  	     columns[j] = initial;
-  	   }
-  	   arr[i] = columns;
-  	 }
-  	 return arr;
-  }
-    //=================================
-    //White noise function
-    noise(w,h)
-    {
-      var res = this.array2D(w,h,0);
-      var i = 0;
-      for(var x = 0; x<w; x++)
-      {
-        for(var y = 0; y<h; y++)
-        {
-          res[x][y]=Math.random();
-        }
-      }
-      return(res);
-    }
-    //=================================
-    //perlin noise function
-    perlin(w,h,scale)
-    {
-      var res = this.array2D(w,h,0);
-      var seed = Math.random();
-      var i = 0;
-      for(var x = 0; x<w; x++)
-      {
-        for(var y = 0; y<h; y++)
-        {
-          res[x][y]=PerlinNoise.noise((x/w)*scale,(y/h)*scale,seed);
-        }
-      }
-      return(res);
-    }
-    //=================================
-    //Worley noise function
-    worley(w,h,n)
-    {
-      var xnoise = new WorleyNoise({ numPoints: n, dim: 2 });
-      var buf = xnoise.renderImage(w, { normalize: true });
-      var res = this.array2D(w,h);
-      var i =0;
-      for(var x=0; x<w; x++)
-      {
-        for(var y=0; y<h; y++)
-        {
-          res[x][y]=buf[i];
-          i++;
-        }
-      }
-      return(res);
-    }
-
-    add(map1,map2,force1,force2)
-    {
-      var res = this.array2D(w,h);
-      var force_sum=force1+force2;
-      var i =0;
-      for(var x=0; x<w; x++)
-      {
-        for(var y=0; y<h; y++)
-        {
-          res[x][y]=((map1[x][y]*force1)+(map2[x][y]*force2))/force_sum;
-          i++;
-        }
-      }
-      return(res);
-    }
-
-    lighten(map1,map2)
-    {
-      var res = this.array2D(w,h);
-      var i =0;
-      for(var x=0; x<w; x++)
-      {
-        for(var y=0; y<h; y++)
-        {
-          if(map1[x][y] > map2[x][y])
-          {
-            res[x][y]=map1[x][y];
-          }
-          else
-          {
-            res[x][y]=map2[x][y];
-          }
-          i++;
-        }
-      }
-      return(res);
-    }
-
-    neg(map)
-    {
-      var res = this.array2D(w,h);
-      var i =0;
-      for(var x=0; x<w; x++)
-      {
-        for(var y=0; y<h; y++)
-        {
-          res[x][y]=1.0-map[x][y];
-          i++;
-        }
-      }
-      return(res);
-    }
-
-
-
-}
-
-
-function voronoi(ctx,w,h,n)
-{
-        var voronoi = new Voronoi();
-        var sites = [];
-        var diagram = null;
-        var bbox = {xl:0,xr:w,yt:0,yb:h}
-        var margin =0;
-
-        var xmargin = w*margin,
-            ymargin = h*margin,
-            xo = xmargin,
-            dx = w-xmargin*2,
-            yo = ymargin,
-            dy = h-ymargin*2;
-        for (var i=0; i<n; i++)
-        {
-          sites.push({
-            x: xo + Math.random()*dx + Math.random()/dx,
-            y: yo + Math.random()*dy + Math.random()/dy
-          });
-        }
-
-
-        voronoi.recycle(diagram);
-        diagram = voronoi.compute(sites, bbox);
-        console.log(diagram);
-
-        // background
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.rect(0,0,w,h);
-        ctx.fillStyle = 'white';
-        ctx.fill();
-        ctx.strokeStyle = '#888';
-        ctx.stroke();
-        // voronoi
-        if (!diagram) {return;}
-        // edges
-        ctx.beginPath();
-        ctx.strokeStyle = '#000';
-        var edges = diagram.edges,
-            iEdge = edges.length,
-            edge, v;
-
-        while (iEdge--) {
-            edge = edges[iEdge];
-            v = edge.va;
-            ctx.moveTo(v.x,v.y);
-            v = edge.vb;
-            ctx.lineTo(v.x,v.y);
-            }
-
-        ctx.stroke();
-        // edges
-        ctx.beginPath();
-        ctx.fillStyle = 'red';
-        var vertices = diagram.vertices,
-            iVertex = vertices.length;
-        while (iVertex--) {
-            v = vertices[iVertex];
-            //ctx.rect(v.x-1,v.y-1,3,3);  //show corners
-            }
-        ctx.fill();
-        // sites
-        ctx.beginPath();
-        ctx.fillStyle = '#44f';
-            iSite = sites.length;
-        while (iSite--) {
-            v = sites[iSite];
-            ctx.rect(v.x-2/3,v.y-2/3,2,2); //show sites
-            }
-        ctx.fill();
-}
 
 
 
@@ -287,19 +79,32 @@ function voronoi(ctx,w,h,n)
 <body>
 
 <div id="frame" class="frame"></div>
-<script>
+<script type="module">
 
+  import {common} from './bsjs/common.js';
+  import { bsPattern } from './bsjs/pattern.js';
 
-  var w =100;
-  var h = 100;
+  var w =500;
+  var h = 500;
   var p = new bsPattern(w,h);
-  var ctx = init(w,h);
-  var dat1 = p.worley(w,h,(Math.random()*300)+10);
-  var dat2 = p.perlin(w,h,20);
-  var dat=p.lighten(p.neg(dat1),dat2);
-  //dat=noise(w,h);
-  draw(w,h,ctx,dat);
-  //voronoi(ctx,w,h,100);
+  p.addBitmap('res/test.jpg','test');
+  p.addBitmap('res/wrink.jpg','wrink');
+
+
+  setTimeout(function(){
+    var ctx = init(w,h);
+
+    var datz = p.noises.test;
+    var dat1 = p.worley(common.random(4,100));
+    var dat2 = p.worley(common.random(4,100));
+    //console.log(datz);
+    //var dat2 = p.perlin(w,h,10000);
+    var dat=p.add(p.neg(dat1),dat2,1,1);
+    //dat=noise(w,h);
+    draw(w,h,ctx,datz);
+    //voronoi(ctx,w,h,100);
+  },300)
+
 
 </script>
 

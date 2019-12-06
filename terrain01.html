@@ -5,348 +5,212 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
-			a {
-				color: #08f;
-			}
+			body{margin:0; padding:0;}
 		</style>
-		<script src="bsjs/perlin.js" ></script>
-		<script src="bsjs/worley.js" ></script>
 	</head>
 	<body>
 
 		<div id="container"></div>
+		<a href="#" id="btn" style="display:block; position:absolute; top:20px; right:20px; z-index:1000; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.8)"></a>
 
 
  <script type="module">
- class bsPattern
- {
-   w = 10;
-   h = 10;
-   constructor(xw,xh)
-   {
-      this.w=xw;
-      this.h=xh;
-   }
 
-   array2D(numrows, numcols, initial)
-   {
-     var arr = [];
-   	for(var i = 0; i < numrows; ++i)
-   	 {
-   	   var columns = [];
-   	   for (var j = 0; j < numcols; ++j)
-   		 {
-   	     columns[j] = initial;
-   	   }
-   	   arr[i] = columns;
-   	 }
-   	 return arr;
-   }
-     //=================================
-     //White noise function
-     noise()
-     {
-       var res = this.array2D(this.w,this.h,0);
-       var i = 0;
-       for(var x = 0; x<this.w; x++)
-       {
-         for(var y = 0; y<this.h; y++)
-         {
-           res[x][y]=Math.random();
-         }
-       }
-       return(res);
-     }
-     //=================================
-     //perlin noise function
-     perlin(scale)
-     {
-       var res = this.array2D(this.w,this.h,0);
-       var seed = Math.random();
-       var i = 0;
-       for(var x = 0; x<this.w; x++)
-       {
-         for(var y = 0; y<this.h; y++)
-         {
-           res[x][y]=PerlinNoise.noise((x/this.w)*scale,(y/this.h)*scale,seed);
-         }
-       }
-       return(res);
-     }
-     //=================================
-     //Worley noise function
-     worley(n)
-     {
-       var xnoise = new WorleyNoise({ numPoints: n, dim: 2 });
-       var buf = xnoise.renderImage(this.w, { normalize: true });
-       var res = this.array2D(this.w,this.h);
-       var i =0;
-       for(var x=0; x<this.w; x++)
-       {
-         for(var y=0; y<this.h; y++)
-         {
-           res[x][y]=buf[i];
-           i++;
-         }
-       }
-       return(res);
-     }
-
-     add(map1,map2,force1,force2)
-     {
-       var res = this.array2D(this.w,this.h,0);
-       var force_sum=force1+force2;
-       var i =0;
-       for(var x=0; x<this.w; x++)
-       {
-         for(var y=0; y<this.h; y++)
-         {
-
-           res[x][y]=((map1[x][y]*force1)+(map2[x][y]*force2))/force_sum;
-           i++;
-         }
-       }
-       return(res);
-     }
-
-     lighten(map1,map2)
-     {
-       let res = this.array2D(this.w,this.h,0);
-       var i =0;
-       for(var x=0; x<this.w; x++)
-       {
-         for(var y=0; y<this.h; y++)
-         {
-           if(map1[x][y] > map2[x][y])
-           {
-             res[x][y]=map1[x][y];
-           }
-           else
-           {
-             res[x][y]=map2[x][y];
-           }
-           i++;
-         }
-       }
-       return(res);
-     }
-
-     neg(map)
-     {
-       var res = this.array2D(this.w,this.h,0);
-       var i =0;
-       for(var x=0; x<this.w; x++)
-       {
-         for(var y=0; y<this.h; y++)
-         {
-           res[x][y]=1.0-map[x][y];
-           i++;
-         }
-       }
-       return(res);
-     }
-
-
-
- }
-
- class blob
- {
- 	mesh;
- 	mesh2;
- 	geometry;
- 	material;
- 	rude;
- 	scaleX;
- 	scaleY;
- 	scaleZ;
- 	segments;
-
- 	constructor(mat)
- 	{
- 		this.material=mat;
- 		this.rude=2.5;
- 		this.scaleX=1.0;
- 		this.scaleY=1.0;
- 		this.scaleZ=1.0;
- 		this.segments=4;
- 	}
-
- 	make()
- 	{
- 		this.geometry= new THREE.SphereGeometry(1, this.segments, this.segments);
- 		for (var i = 0; i < this.geometry.vertices.length; i++)
- 		{
- 			var p = this.geometry.vertices[i];
- 			p.x=(p.x+(Math.random()/this.rude))*this.scaleX;
- 			p.y=(p.y+(Math.random()/this.rude))*this.scaleY;
- 			p.z=p.z*this.scaleZ;
- 			//p.normalize().multiplyScalar(Math.random()/4.0);
- 		}
- 		this.geometry.computeVertexNormals();
- 		this.geometry.normalsNeedUpdate = true;
- 		this.geometry.verticesNeedUpdate = true;
- 		this.mesh = new THREE.Mesh(this.geometry, this.material);
- 	}
-
- 	getMesh()
- 	{
- 		return(this.mesh);
- 	}
-
- 	moveMesh(x,y,z)
- 	{
- 		var position = new THREE.Vector3();
- 		this.mesh.position.x = x;
- 		this.mesh.position.y = y;
- 		this.mesh.position.z = z;
- 	}
-
- 	rotate(x,y,z)
- 	{
- 		this.mesh.rotateX(x);
- 		this.mesh.rotateY(y);
- 		this.mesh.rotateZ(z);
- 	}
- }
-
-class bsBuilding
-{
-	mesh;
-	geometry;
-	material;
-
-	constructor(x,y,z)
-	{
-     this.geometry = new THREE.BoxBufferGeometry( x, y, z );
-		 this.material = new THREE.MeshPhongMaterial( { color: 0x00ccff, wireframe: false } );
-		 this.mesh = new THREE.Mesh( this.geometry, this.material );
-	}
-
-	getMesh()
-	{
-		return(this.mesh);
-	}
-
-	moveMesh(x,y,z)
-	{
-		var position = new THREE.Vector3();
-	  this.mesh.position.x = x;
-		this.mesh.position.y = y;
-		this.mesh.position.z = z;
-	}
-
-
-}
-
-
-
+    import {common} from './bsjs/common.js';
 		import * as THREE from '../build/three.module.js';
 		import { TrackballControls } from './jsm/controls/TrackballControls.js';
+		import { Sky } from './jsm/objects/Sky.js';
+		import { Water } from './jsm/objects/Water.js';
 
 		import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
-					import { RenderPass } from './jsm/postprocessing/RenderPass.js';
-					import { SAOPass } from './jsm/postprocessing/SAOPass.js';
+		import { RenderPass } from './jsm/postprocessing/RenderPass.js';
+		import { SSAOPass } from './jsm/postprocessing/SSAOPass.js';
+
+		import {blob} from './bsjs/blob.js';
+		import {bsPattern} from './bsjs/pattern.js';
 
 
 			var camera, scene, renderer, controls, light;
 			var mesh;
-      var composer, renderPass, saoPass;
+      var composer, renderPass, ssaoPass;
+			var sky, sunSphere;
+			var ground;
+      var bld = [];
+      var geometry;
+		  //var segments = 70;
+			//var size = 500;
+			var water;
 
-				var geometry = new THREE.BufferGeometry();
-				var vertices;
-				var segments = 70;
-				var bld = [];
 
 
-        /*for(var i=0; i<1000; i++)
+class terrain
+{
+	segments;
+	size;
+	ground;
+	geometry;
+	material;
+	mesh;
+
+	constructor(seg,s)
+	{
+		this.segments=seg;
+		this.size=s;
+		this.ground = new THREE.Group();
+    this.ground.rotation.x = - Math.PI / 2;
+		this.geometry = new THREE.PlaneBufferGeometry(this.size,this.size,this.segments,this.segments);
+		this.material = new THREE.MeshPhongMaterial({color:0xffcc66,side: THREE.DoubleSide, wireframe:true});
+		this.mesh = new THREE.Mesh( this.geometry, this.material );
+    this.ground.add(this.mesh);
+	}
+
+	getTerrain()
+	{
+		return(this.ground);
+	}
+
+	getGeometry()
+	{
+		return(this.geometry);
+	}
+
+
+	setMaterial(mat)
+	{
+		this.mesh.material = mat;
+	}
+
+	setPosition(x,y,z)
+	{
+		this.ground.translateX(x);
+		this.ground.translateY(y);
+		this.ground.translateZ(z);
+	}
+
+	makeGeography()
+	{
+    var me = this;
+		var p =  new bsPattern(this.segments+1,this.segments+1);
+		p.addBitmap('res/meander.jpg','test');
+
+
+    setTimeout(function(){
+			var dat2 = p.worley(common.random(4,100));
+			var dat1 = p.noises.test;
+			var noise = p.add(p.neg(dat2),dat1,1,1);
+
+			var vertices = me.mesh.geometry.getAttribute('position').array;
+			var scale = common.random(1,100);
+			var min = 1000000;
+			var max = -1000000;
+			for(var i = -1; i < vertices.length; i=i+3)
+			{
+				if(i>0)
 				{
-				  //bld[i] = new bsBuilding(Math.random(),Math.random(),Math.random());
-					bld[i] = new blob(new THREE.MeshStandardMaterial( { color: new THREE.Color("hsl("+(Math.floor(Math.random()*30)+20)+","
-						+(Math.floor(Math.random()*100)+50)+"%,50%)"), roughness:1.0, flatShading:true, wireframe:false }));
-						bld[i].segments=Math.floor(Math.random()*7)+4;
-	          var sc = (Math.random()/4.0)*(Math.random()*5.0);
+					vertices[i]=(noise[Math.floor((i/3) / (me.segments+1))][ Math.floor((i/3)) % (me.segments+1)])*scale;
+					if(vertices[i]>max) max=vertices[i];
+					if(vertices[i]<min) min=vertices[i];
+				}
+		  }
+			var level = (max-min)/2.0;
+			console.log(level);
+			for(var i = -1; i < vertices.length; i=i+3)
+			{
+				if(i>0)
+				{
+					vertices[i]=vertices[i]-level;
+				}
+			}
 
-						bld[i].scaleY = sc;
-	          bld[i].scaleZ = sc;
-	          bld[i].scaleX = sc;
+			me.mesh.geometry.setAttribute('position', new THREE.Float32BufferAttribute( vertices, 3 ));
 
-						bld[i].make();
-				}*/
+			me.mesh.geometry.computeFaceNormals();
+			me.mesh.geometry.computeVertexNormals();
+		  me.mesh.geometry.normalsNeedUpdate = true;
+			me.mesh.geometry.verticesNeedUpdate = true;
+		},300);
 
+  }
 
+	coords(x,y,vertices)
+	{
+			var adress =((y*(this.segments+1))+x)*3;
+			return({x:this.mesh.geometry[adress],y:this.mesh.geometry[adress+1],z:this.mesh.geometry[adress+2]});
+	}
+  addObject(object,sx,sy,x,y,z)
+  {
+     var pos = this.coords(sx,sy);
+     object.moveMesh(pos.x+x,pos.y+x,pos.z+z);
+		 bld[0]=object;
+		 this.ground.add(bld[0].getMesh());
+		 scene.add(bld[0].getMesh());
+  }
+
+}
 
 
 
 			init();
 			animate();
 			function init() {
-				//
-				camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
-				camera.position.z = 64;
+
+				//scene
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x050505 );
-				//
-				var light1 = new THREE.HemisphereLight();
-				//scene.add( light1 );
 
-				scene.add( new THREE.AmbientLight( 0x222222 ) ); //some ambient to see int the dark
+				//camera
+				camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
+				camera.position.z = 64;
+
+
+				//lightd
+				var light1 = new THREE.HemisphereLight(0xffffff,0xffffff,0.6);
+				light1.color.setHSL(0.6,1,0,6);
+				light1.groundColor.setHSL(0.095,1,0.75);
+				light1.position.set(0,50,0);
+
+				scene.add( light1 );
+				var light2 = new THREE.DirectionalLight(0xffffff,1);
+        light2.color.setHSL(0.1,1,0.95);
+				light2.position.set(-1,1.75,1);
+				light2.position.multiplyScalar(30);
+				scene.add( light2 );
+
+				scene.add( new THREE.AmbientLight( 0xffffff ) ); //some ambient to see int the dark
 				light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
 				light.position.copy( camera.position );
 				scene.add( light );
 
-				//
+
+				//Sky
+ 			 sky = new Sky();
+ 			 sky.scale.setScalar( 450000 );
+ 			 scene.add( sky );
+
+				//ground
+        //ground=new THREE.Group();
+
+
+        /*geometry = new THREE.PlaneBufferGeometry(size,size,segments,segments);
 
 
 
-        geometry = new THREE.PlaneBufferGeometry(50,50,segments,segments);
 
 
 
 
-				// load a texture, set wrap mode to repeat
-				var texture = new THREE.TextureLoader().load( "res/sand.jpg");
-				texture.wrapS = THREE.RepeatWrapping;
-				texture.wrapT = THREE.RepeatWrapping;
-				texture.repeat.set( 14, 14);
 
 
-				var material = new THREE.MeshPhongMaterial( {
-						color: 0xffcc66,
-						//new THREE.Color("hsl("+(Math.floor(Math.random()*50)+20)+","
-						//+Math.floor(Math.random()*100)+"%,50%)"),
-						roughness:0.96,
-						flatShading:false,
-						wireframe:false,
-						map:texture,
-						side: THREE.DoubleSide
-					});
-					material.map=texture;
+
 					//console.log(material);
 					mesh = new THREE.Mesh( geometry, material );
-	 				scene.add( mesh );
+
+					ground.rotation.x = - Math.PI / 2;
+	 				ground.add( mesh );*/
 
 
 
-
-
-
-
-
-				/*var material = new THREE.MeshStandardMaterial( {
-					side: THREE.DoubleSide,
-					vertexColors: THREE.VertexColors,
-					flatShading:false,
-					color: 0xcfe8666,
-					wireframe : false,
-					/metalness : 0,
-					roughness: 1.0,
-					map:texture
-
-				} );*/
-
-
-				//
+				//renderer
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -366,19 +230,72 @@ class bsBuilding
 				composer = new EffectComposer( renderer );
 				renderPass = new RenderPass( scene, camera );
 				composer.addPass( renderPass );
-				saoPass = new SAOPass( scene, camera, false, true );
-				composer.addPass( saoPass );
-				saoPass.params.saoIntensity=0.00035;
-        saoPass.params.saoBlurRadius=5;
-
-//add object
-
+				ssaoPass = new SSAOPass( scene, camera, window.innerWidth, window.innerHeight);
+				ssaoPass.kernelRadius = 16;
+				composer.addPass( ssaoPass );
+				//saoPass.params.saoIntensity=0.00035;
+        //saoPass.params.saoBlurRadius=5;
 
 
-				//
+
+				//resize
 				window.addEventListener( 'resize', onWindowResize, false );
 
-       realtime();
+				// load a texture, set wrap mode to repeat
+				var texture = new THREE.TextureLoader().load( "res/toonsand.png");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( 200, 200);
+
+				var material = new THREE.MeshStandardMaterial( {
+ 					 color: 0x443300,
+ 					 //new THREE.Color("hsl("+(Math.floor(Math.random()*50)+20)+","
+ 					 //+Math.floor(Math.random()*100)+"%,50%)"),
+ 					 roughness:0.75,
+ 					 flatShading:false,
+ 					 wireframe:false,
+ 					 map:texture,
+ 					 side: THREE.DoubleSide
+ 				 });
+
+        ground = new terrain(50,1000);
+				ground.setMaterial(material);
+				ground.makeGeography();
+				realtime();
+				ground.setPosition(0,0,0);
+				scene.add(ground.getTerrain());
+				document.getElementById('btn').addEventListener("click",function(){
+	 			 ground.makeGeography();
+				 realtime();
+	 		 });
+
+				var t2 = new terrain(10,1000);
+        //scene.add(t2.getTerrain());
+
+        //realtime();
+				water = new Water(
+					t2.getGeometry(),
+					{
+						textureWidth: 512,
+						textureHeight: 512,
+						waterNormals: new THREE.TextureLoader().load( 'res/waternormals.jpg', function ( texture ) {
+							texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+						} ),
+						alpha: 0.5,
+						sunDirection: light.position.clone().normalize(),
+						sunColor: 0xffffff,
+						waterColor: 0x000000,
+						distortionScale: 3.7,
+						fog: scene.fog !== undefined
+					}
+				);
+
+				water.rotation.x = - Math.PI / 2;
+			  scene.add( water );
+
+
+
+
 
 			}
 			function onWindowResize() {
@@ -386,13 +303,21 @@ class bsBuilding
 				camera.updateProjectionMatrix();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
+
+
+
 			//
 			function animate() {
+				var time = performance.now() * 0.001;
+				water.material.uniforms[ 'time' ].value += 1.0 / 120.0;
 				requestAnimationFrame( animate );
 				render();
         controls.update();
 				light.position.copy(camera.position);
-				composer.render();
+
+
+
+				//composer.render();
 
 			}
 			function render() {
@@ -402,54 +327,32 @@ class bsBuilding
 
 
 
-	function array2D(numrows, numcols, initial)
-	{
-	  var arr = [];
-		 for(var i = 0; i < numrows; ++i)
-		 {
-		   var columns = [];
-		   for (var j = 0; j < numcols; ++j)
-			 {
-		     columns[j] = initial;
-		   }
-		   arr[i] = columns;
-		 }
-		 return arr;
-	}
 
-function coords(x,y,vertices)
-{
-    var adress =((y*(segments+1))+x)*3;
-    return({x:vertices[adress],y:vertices[adress+1],z:vertices[adress+2]});
-}
+
+
 
 function realtime()
 {
 
-  //constructing an array of perl noise
-	var noise = array2D(segments+1,segments+1,0);
-	var noisesize = (Math.random()*10)+4 ;
-	for(var x = 0; x<segments+1; x++)
-	{
-		for(var y = 0; y<segments+1; y++)
-		{
-			noise[x][y]=PerlinNoise.noise(noisesize*(x/segments),noisesize*(y/segments),0.8);
-		}
-	}
+	bld[0] = new blob(new THREE.MeshStandardMaterial( { color: 0xffcc33,  flatShading:true, wireframe:false }));
+		bld[0].segments=10;
+
+		bld[0].scaleY = 200;
+		bld[0].scaleZ = 200;
+		bld[0].scaleX = 200;
+
+		bld[0].make();
+    ground.addObject(bld[0]);
 
 
-
-
-	var noise1 = array2D(segments+1,segments+1,0);
-	var noisesize = (Math.random()*8);
-
+  /*f
   var p =  new bsPattern(segments+1,segments+1);
 	//noise = p.lighten(p.neg(p.worley((Math.random()*300)+10)),p.worley((Math.random()*10)+10));
 	//noise = p.perlin(10);
 	//noise = p.noise();
   var noise = p.worley(500);
 	var noise1=p.perlin(2); //p.add(p.perlin(1),p.perlin(100),1,4);
-	var noise3 = p.worley((Math.random()*100)+10);
+	var noise3 = p.worley((Math.random()*1000)+10);
 
 
 
@@ -461,15 +364,13 @@ function realtime()
 			vertices[i]=
 			//noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)]*2;
 			(
-				((noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*2)+
-				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*12)
-			)
+				((noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*(size/20))+
+				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*(size/2.5))
+			);
 
 		}
 
-		//if(i==1 ) bld[0].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
-    //if(i==8789) bld[1].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
-    //if(i==24101) bld[2].moveMesh(vertices[i-2],vertices[i-1],vertices[i]);
+
 
 
   }
@@ -477,45 +378,42 @@ function realtime()
 	mesh.geometry.computeFaceNormals();
 	mesh.geometry.computeVertexNormals();
 	mesh.geometry.normalsNeedUpdate = true;
-  mesh.geometry.verticesNeedUpdate = true;
+  mesh.geometry.verticesNeedUpdate = true;*/
 
-
+  /*var xp =  new bsPattern(ground.segments+1,ground.segments+1);
+	var noise = xp.worley(500);
 	var i = 0;
-  for(x=0; x<segments; x++)
+  for(var x=0; x<ground.segments; x++)
   {
-    for(y=0; y<segments; y++)
+    for(var y=0; y<ground.segments; y++)
     {
-      if(noise3[x][y]>0.2)
+      if(noise[x][y]>0.2)
       {
-				var sc=(noise3[x][y]-0.2)*3.0;
-				if(Math.random()>0.01)
+				var sc=(noise[x][y]-0.2)*10.0;
+				if(Math.random() < 0.5)
 				{
-          var pos = coords(x,y,vertices);
-				  bld[i] = new blob(new THREE.MeshPhongMaterial( { color: new THREE.Color("hsl("+(Math.floor(noise3[x][y]*30)+20)+","
-					+(Math.floor(Math.random()*100)+50)+"%,50%)"), roughness:1.0, flatShading:true, wireframe:false }));
-					  bld[i].segments=Math.floor(Math.random()*7)+4;
-					  //var sc = (Math.random()/4.0)*(Math.random()*5.0);
-
+				  bld[i] = new blob(new THREE.MeshPhongMaterial( { color: new THREE.Color("hsl("+(Math.floor(noise[x][y]*30)+20)+","
+					+(Math.floor(Math.random()*100)+50)+"%,50%)"),  flatShading:true, wireframe:false }));
+					  bld[i].segments=Math.floor(Math.random()*(8))+4;
 
 					  bld[i].scaleY = sc;
 					  bld[i].scaleZ = sc;
 					  bld[i].scaleX = sc;
 
 					  bld[i].make();
-            bld[i].moveMesh(pos.x,pos.y,pos.z);
-					  scene.add(bld[i].getMesh());
+						ground.addObject(bld[i],x,y,0,0,0);
+            //bld[i].moveMesh(pos.x+common.random(-1,1),pos.y,pos.z);
+					  //ground.add(bld[i].getMesh());
           i++;
 				}
       }
     }
 
-  }
+  }*/
 
-
-
+//ground.center();
 
 }
 
 		</script>
-<a href="javascript:realtime()" style="display:block; position:absolute; top:20px; right:20px; z-index:1000; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.8)"></a>
 	</body>
