@@ -37,6 +37,8 @@ export class blob
    this.geometry.normalsNeedUpdate = true;
    this.geometry.verticesNeedUpdate = true;
    this.mesh = new THREE.Mesh(this.geometry, this.material);
+   this.mesh.castShadow = true;
+   this.mesh.receiveShadow = false;
  }
 
  getMesh()

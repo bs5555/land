@@ -25,14 +25,19 @@
 		import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
 		import { RenderPass } from './jsm/postprocessing/RenderPass.js';
 		import { SSAOPass } from './jsm/postprocessing/SSAOPass.js';
+		import { SAOPass } from './jsm/postprocessing/SAOPass.js';
+		import { SSAARenderPass } from './jsm/postprocessing/SSAARenderPass.js';
 
 		import {blob} from './bsjs/blob.js';
 		import {bsPattern} from './bsjs/pattern.js';
 
+		import { ShadowMapViewer } from './jsm/utils/ShadowMapViewer.js';
+
+
 
 			var camera, scene, renderer, controls, light;
 			var mesh;
-      var composer, renderPass, ssaoPass;
+      var composer, renderPass, saoPass, ssaaRenderPassP, ssaaRenderPassO;
 			var sky, sunSphere;
 			var ground;
       var bld = [];
@@ -40,6 +45,9 @@
 		  //var segments = 70;
 			//var size = 500;
 			var water;
+
+			var dirLightShadowMapViewer;
+			var dirLight;
 
 
 
@@ -61,6 +69,8 @@ class terrain
 		this.geometry = new THREE.PlaneBufferGeometry(this.size,this.size,this.segments,this.segments);
 		this.material = new THREE.MeshPhongMaterial({color:0xffcc66,side: THREE.DoubleSide, wireframe:true});
 		this.mesh = new THREE.Mesh( this.geometry, this.material );
+		this.mesh.receiveShadow = true;
+		this.mesh.castShadow = true;
     this.ground.add(this.mesh);
 	}
 
@@ -100,7 +110,7 @@ class terrain
 			var noise = p.add(p.neg(dat2),dat1,1,1);
 
 			var vertices = me.mesh.geometry.getAttribute('position').array;
-			var scale = common.random(1,100);
+			var scale = common.random(10,400);
 			var min = 1000000;
 			var max = -1000000;
 			for(var i = -1; i < vertices.length; i=i+3)
@@ -136,7 +146,6 @@ class terrain
 	{
 		  var vertices = this.mesh.geometry.getAttribute('position').array;
 			var adress =((y*(this.segments+1))+x)*3;
-			//console.log(this.geometry);
 			return({x:vertices[adress],y:vertices[adress+1],z:vertices[adress+2]});
 	}
 
@@ -147,11 +156,17 @@ class terrain
 
 			init();
 			animate();
+
+
+
+
+
 			function init() {
 
 				//scene
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x050505 );
+				//scene.fog = new THREE.Fog(0xffffff, 20, 1000);
 
 				//camera
 				camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
@@ -159,22 +174,73 @@ class terrain
 
 
 				//lightd
-				var light1 = new THREE.HemisphereLight(0xffffff,0xffffff,0.6);
-				light1.color.setHSL(0.6,1,0,6);
-				light1.groundColor.setHSL(0.095,1,0.75);
+				var light1 = new THREE.HemisphereLight(0x00ccff,0xff0000,0.6);
+				//light1.color.setHSL(0.6,1,0,6);
+				//light1.groundColor.setHSL(0.095,1,0.75);
 				light1.position.set(0,50,0);
-
 				scene.add( light1 );
-				var light2 = new THREE.DirectionalLight(0xffffff,1);
-        light2.color.setHSL(0.1,1,0.95);
+
+				var light2 = new THREE.DirectionalLight(0xff7a73,1);
+        /*//light2.color.setHSL(0.1,1,0.95);
 				light2.position.set(-1,1.75,1);
-				light2.position.multiplyScalar(30);
-				scene.add( light2 );
+				light2.position.multiplyScalar(130);
+        light2.castShadow = true;
+
+        light2.shadow.mapSize.width = 2048;
+				light2.shadow.mapSize.height = 2048;
+
+				var d  = 50;
+				light2.shadow.camera.left=-d;
+				light2.shadow.camera.right=d;
+				light2.shadow.camera.top=d;
+				light2.shadow.camera.bottom=-d;
+
+				light2.shadow.camera.far=100;
+				light2.shadow.camera.bias=-0.0001;
+
+				scene.add( new THREE.CameraHelper( light2.shadow.camera ) );
+				scene.add( light2 );*/
+
+				dirLight = new THREE.DirectionalLight( 0xffffff, 1 ,100);
+				dirLight.name = 'Dir. Light';
+				dirLight.position.set( 0, 1000, 0 );
+				dirLight.castShadow = true;
+				dirLight.shadow.bias = -1.0/10000.0;
+				dirLight.shadow.camera.near = 0.1;
+				dirLight.shadow.camera.far = 2000;
+				dirLight.shadow.camera.right = 800;
+				dirLight.shadow.camera.left = - 800;
+				dirLight.shadow.camera.top	= 800;
+				dirLight.shadow.camera.bottom = - 800;
+				dirLight.shadow.mapSize.width = 1024;
+				dirLight.shadow.mapSize.height = 1024;
+				scene.add( dirLight );
+
+
+				var helper1 = new THREE.DirectionalLightHelper( dirLight, 5 );
+        scene.add( helper1 );
+				scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
+
+
+				dirLightShadowMapViewer = new ShadowMapViewer( dirLight );
+				dirLightShadowMapViewer.position.x = 10;
+				dirLightShadowMapViewer.position.y = 10;
+				dirLightShadowMapViewer.size.width = 256;
+				dirLightShadowMapViewer.size.height = 256;
+				dirLightShadowMapViewer.update(); //Required when setting position or size directly
+
+				/*var light3 = new THREE.DirectionalLight(0xad87ff,1);
+        //light2.color.setHSL(0.1,1,0.95);
+				light3.position.set(1,1.75,1);
+				light3.position.multiplyScalar(30);
+				scene.add( light3 );
+				var helper3 = new THREE.DirectionalLightHelper( light3, 5 );
+        scene.add( helper3 );*/
 
 				scene.add( new THREE.AmbientLight( 0xffffff ) ); //some ambient to see int the dark
 				light = new THREE.PointLight( 0xffffff );        //a spotlight added to the camera
 				light.position.copy( camera.position );
-				scene.add( light );
+				//scene.add( light );
 
 
 				//Sky
@@ -209,6 +275,8 @@ class terrain
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.shadowMap.enabled =  true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 				document.body.appendChild( renderer.domElement );
 
 				// controls
@@ -225,11 +293,25 @@ class terrain
 				composer = new EffectComposer( renderer );
 				renderPass = new RenderPass( scene, camera );
 				composer.addPass( renderPass );
-				ssaoPass = new SSAOPass( scene, camera, window.innerWidth, window.innerHeight);
-				ssaoPass.kernelRadius = 16;
-				composer.addPass( ssaoPass );
-				//saoPass.params.saoIntensity=0.00035;
-        //saoPass.params.saoBlurRadius=5;
+        composer.setPixelRatio( 1 );
+				saoPass = new SAOPass( scene, camera, true, false);
+        saoPass.params.bias = 0.25;
+				saoPass.params.kernelRadius = 54;
+				saoPass.params.saoBlurRadius = 3;
+				saoPass.params.saoIntensity =0.0004;
+				saoPass.params.saoScale = 5;
+				saoPass.params.minResolution = 0.001;
+
+
+
+				composer.addPass( saoPass );
+
+				/*composer = new EffectComposer( renderer );
+				composer.setPixelRatio( 1 ); // ensure pixel ratio is always 1 for performance reasons
+				ssaaRenderPassP = new SSAARenderPass( scene, camera );
+				composer.addPass( ssaaRenderPassP );
+				ssaaRenderPassO = new SSAARenderPass( scene, camera );
+				composer.addPass( ssaaRenderPassO );*/
 
 
 
@@ -243,7 +325,7 @@ class terrain
 				texture.repeat.set( 200, 200);
 
 				var material = new THREE.MeshStandardMaterial( {
- 					 color: 0x443300,
+ 					 color: 0x666666,
  					 //new THREE.Color("hsl("+(Math.floor(Math.random()*50)+20)+","
  					 //+Math.floor(Math.random()*100)+"%,50%)"),
  					 roughness:0.75,
@@ -256,12 +338,11 @@ class terrain
         ground = new terrain(50,1000);
 				ground.setMaterial(material);
 				ground.makeGeography();
-				rocks();
+				setTimeout(rocks,2000);
 				ground.setPosition(0,0,0);
 				scene.add(ground.getTerrain());
 				document.getElementById('btn').addEventListener("click",function(){
 	 			 ground.makeGeography();
-				 realtime();
 	 		 });
 
 				var t2 = new terrain(10,1000);
@@ -278,8 +359,8 @@ class terrain
 						} ),
 						alpha: 0.5,
 						sunDirection: light.position.clone().normalize(),
-						sunColor: 0xffffff,
-						waterColor: 0x000000,
+						sunColor: 0xff0000,
+						waterColor: 0x00ccff,
 						distortionScale: 3.7,
 						fog: scene.fog !== undefined
 					}
@@ -287,7 +368,6 @@ class terrain
 
 				water.rotation.x = - Math.PI / 2;
 			  scene.add( water );
-
 
 
 
@@ -302,20 +382,26 @@ class terrain
 
 
 			//
-			function animate() {
+			function animate()
+			{
 				var time = performance.now() * 0.001;
 				water.material.uniforms[ 'time' ].value += 1.0 / 120.0;
 				requestAnimationFrame( animate );
 				render();
+				dirLightShadowMapViewer.render( renderer );
         controls.update();
 				light.position.copy(camera.position);
-
-
-
-				//composer.render();
+			  //composer.render();
+				dirLight.position.x = Math.sin(time/4.0)*1000.0;
+				dirLight.position.y = Math.cos(time/4.0)*1000.0;
+				var red =  (Math.floor((1.0+Math.cos(time/4.0))*100));
+				console.log(red);
+				dirLight.color=new THREE.Color('rgb('+red+',0,0)');
 
 			}
-			function render() {
+
+			function render()
+			{
 				var time = Date.now() * 0.001;
 				renderer.render( scene, camera );
 			}
@@ -335,15 +421,17 @@ function rocks()
   {
     for(var y=0; y<ground.segments; y++)
     {
-      if(noise[x][y]>0.2)
+      if(noise[x][y]>0.1)
       {
-				var sc=(noise[x][y]-0.2)*10.0;
-				if(Math.random() < 0.5)
+				var sc=(noise[x][y]-0.1)*20.0;
+				if(Math.random() < 0.1)
 				{
-				  bld[i] = new blob(new THREE.MeshPhongMaterial( {
-						color: new THREE.Color("hsl("+(Math.floor(noise[x][y]*30)+20)+","
-					+(Math.floor(Math.random()*100)+50)+"%,50%)"),
+				  bld[i] = new blob(new THREE.MeshStandardMaterial( {
+						//color: new THREE.Color("hsl("+(Math.floor(noise[x][y]*30)+20)+","
+					//+(Math.floor(Math.random()*100)+50)+"%,50%)"),
+					color: new THREE.Color('rgb(150,150,150)'),
 					  flatShading:true,
+						roughness:0.75,
 					  wireframe:false
 				  }));
 					  bld[i].segments=Math.floor(Math.random()*(8))+4;
@@ -352,9 +440,10 @@ function rocks()
 					  bld[i].scaleX = sc;
 						bld[i].make();
 						var pos = ground.coords(x,y);
-						console.log(pos);
-						bld[i].moveMesh(pos.x,pos.y,pos.z)
+						bld[i].moveMesh(pos.x,pos.y,pos.z);
 				    ground.getTerrain().add(bld[i].getMesh());
+						bld[i].getMesh().castShadow = true;
+				    bld[i].getMesh().receiveShadow = true;
           i++;
 				}
       }
