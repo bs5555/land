@@ -91,12 +91,12 @@ class terrain
 	{
     var me = this;
 		var p =  new bsPattern(this.segments+1,this.segments+1);
-		p.addBitmap('res/meander.jpg','test');
+		//p.addBitmap('res/meander.jpg','test');
 
 
     setTimeout(function(){
 			var dat2 = p.worley(common.random(4,100));
-			var dat1 = p.noises.test;
+			var dat1 = p.worley(common.random(50,300));
 			var noise = p.add(p.neg(dat2),dat1,1,1);
 
 			var vertices = me.mesh.geometry.getAttribute('position').array;
@@ -132,19 +132,14 @@ class terrain
 
   }
 
-	coords(x,y,vertices)
+	coords(x,y)
 	{
+		  var vertices = this.mesh.geometry.getAttribute('position').array;
 			var adress =((y*(this.segments+1))+x)*3;
-			return({x:this.mesh.geometry[adress],y:this.mesh.geometry[adress+1],z:this.mesh.geometry[adress+2]});
+			//console.log(this.geometry);
+			return({x:vertices[adress],y:vertices[adress+1],z:vertices[adress+2]});
 	}
-  addObject(object,sx,sy,x,y,z)
-  {
-     var pos = this.coords(sx,sy);
-     object.moveMesh(pos.x+x,pos.y+x,pos.z+z);
-		 bld[0]=object;
-		 this.ground.add(bld[0].getMesh());
-		 scene.add(bld[0].getMesh());
-  }
+
 
 }
 
@@ -254,14 +249,14 @@ class terrain
  					 roughness:0.75,
  					 flatShading:false,
  					 wireframe:false,
- 					 map:texture,
+ 					 //map:texture,
  					 side: THREE.DoubleSide
  				 });
 
         ground = new terrain(50,1000);
 				ground.setMaterial(material);
 				ground.makeGeography();
-				realtime();
+				rocks();
 				ground.setPosition(0,0,0);
 				scene.add(ground.getTerrain());
 				document.getElementById('btn').addEventListener("click",function(){
@@ -331,56 +326,9 @@ class terrain
 
 
 
-function realtime()
+function rocks()
 {
-
-	bld[0] = new blob(new THREE.MeshStandardMaterial( { color: 0xffcc33,  flatShading:true, wireframe:false }));
-		bld[0].segments=10;
-
-		bld[0].scaleY = 200;
-		bld[0].scaleZ = 200;
-		bld[0].scaleX = 200;
-
-		bld[0].make();
-    ground.addObject(bld[0]);
-
-
-  /*f
-  var p =  new bsPattern(segments+1,segments+1);
-	//noise = p.lighten(p.neg(p.worley((Math.random()*300)+10)),p.worley((Math.random()*10)+10));
-	//noise = p.perlin(10);
-	//noise = p.noise();
-  var noise = p.worley(500);
-	var noise1=p.perlin(2); //p.add(p.perlin(1),p.perlin(100),1,4);
-	var noise3 = p.worley((Math.random()*1000)+10);
-
-
-
-	var vertices = geometry.getAttribute('position').array;
-	for(var i = -1; i < vertices.length; i=i+3)
-	{
-		if(i>0)
-		{
-			vertices[i]=
-			//noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)]*2;
-			(
-				((noise[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*(size/20))+
-				((noise1[Math.floor((i/3) / (segments+1))][ Math.floor((i/3)) % (segments+1)])*(size/2.5))
-			);
-
-		}
-
-
-
-
-  }
-	mesh.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-	mesh.geometry.computeFaceNormals();
-	mesh.geometry.computeVertexNormals();
-	mesh.geometry.normalsNeedUpdate = true;
-  mesh.geometry.verticesNeedUpdate = true;*/
-
-  /*var xp =  new bsPattern(ground.segments+1,ground.segments+1);
+  var xp =  new bsPattern(ground.segments+1,ground.segments+1);
 	var noise = xp.worley(500);
 	var i = 0;
   for(var x=0; x<ground.segments; x++)
@@ -392,24 +340,27 @@ function realtime()
 				var sc=(noise[x][y]-0.2)*10.0;
 				if(Math.random() < 0.5)
 				{
-				  bld[i] = new blob(new THREE.MeshPhongMaterial( { color: new THREE.Color("hsl("+(Math.floor(noise[x][y]*30)+20)+","
-					+(Math.floor(Math.random()*100)+50)+"%,50%)"),  flatShading:true, wireframe:false }));
+				  bld[i] = new blob(new THREE.MeshPhongMaterial( {
+						color: new THREE.Color("hsl("+(Math.floor(noise[x][y]*30)+20)+","
+					+(Math.floor(Math.random()*100)+50)+"%,50%)"),
+					  flatShading:true,
+					  wireframe:false
+				  }));
 					  bld[i].segments=Math.floor(Math.random()*(8))+4;
-
 					  bld[i].scaleY = sc;
 					  bld[i].scaleZ = sc;
 					  bld[i].scaleX = sc;
-
-					  bld[i].make();
-						ground.addObject(bld[i],x,y,0,0,0);
-            //bld[i].moveMesh(pos.x+common.random(-1,1),pos.y,pos.z);
-					  //ground.add(bld[i].getMesh());
+						bld[i].make();
+						var pos = ground.coords(x,y);
+						console.log(pos);
+						bld[i].moveMesh(pos.x,pos.y,pos.z)
+				    ground.getTerrain().add(bld[i].getMesh());
           i++;
 				}
       }
     }
 
-  }*/
+  }
 
 //ground.center();
 
